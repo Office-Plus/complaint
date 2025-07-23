@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paezr - Attendance & Payroll Outsourcing</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Poppins font for logo -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+    <!-- AOS for scroll animations -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="#" class="nav-brand">Pae<span>zr</span></a>
+        <div class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links">
+            <a href="#hero">Home</a>
+            <a href="#faceclock">Face Clock</a>
+            <a href="#usp">Our USP</a>
+            <a href="#payroll">Payroll</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#testimonials">Testimonials</a>
+            <a href="#contact">Contact</a>
+            <a href="/admin/login.html" target="_blank">Login/Signup</a>
+            <a href="/channelpartner.html" target="_blank">Channel Partner</a>
+            <a href="/face/" target="_blank" class="cta-button" style="background: var(--primary-color); color: var(--white);">Launch FaceID</a>
+            <a href="#contact" class="cta-button">Book a Demo</a>
+        </div>
+        <div class="nav-cta">
+            <!-- Removed duplicate Book a demo button -->
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title fade-up">
+                <span class="highlight">AI-Powered</span> Attendance & Payroll Management
+            </h1>
+            <p class="hero-subtitle fade-up stagger-delay-1">Transform your HR operations with our cutting-edge Face Recognition Attendance System and Automated Payroll Solutions. Perfect for businesses of all sizes.</p>
+            <div class="hero-cta-group fade-up stagger-delay-2">
+                <a href="#contact" class="cta-button">Book a Demo</a>
+                <a href="#pricing" class="cta-button outline">View Pricing</a>
+            </div>
+            <div class="hero-stats fade-up stagger-delay-3">
+                <div class="stat-item slide-in-left">
+                    <span class="stat-number">10,000+</span>
+                    <span class="stat-label">Active Users</span>
+                </div>
+                <div class="stat-item slide-in-left stagger-delay-1">
+                    <span class="stat-number">98%</span>
+                    <span class="stat-label">Accuracy Rate</span>
+                </div>
+                <div class="stat-item slide-in-left stagger-delay-2">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Support</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Time Off Section -->
+    <section id="timeoff" class="section">
+        <div class="container">
+            <div class="feature-section">
+                <div class="feature-content">
+                    <h2>Time Off</h2>
+                    <p class="section-subtitle">Request, approve and keep track of time and attendance seamlessly directly in your HR software. Whether it's holiday, sick days, work from home, parental leave or unpaid holiday.</p>
+                    <a href="#contact" class="cta-button">Find out more</a>
+                </div>
+                <div class="calendar-demo">
+                    <div class="calendar-header">
+                        <i class="fas fa-user-circle"></i>
+                        <span>👋 Hi Ben</span>
+                    </div>
+                    <div class="calendar-request">
+                        <p>Anastasia requested 5 days of Holiday, your approval is required.</p>
+                    </div>
+                    <div class="calendar-grid">
+                        <!-- Calendar days will be added via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Short Leave Tracking Section -->
+    <section id="shortleave" class="section bg-light">
+        <div class="content-wrapper">
+            <div class="feature-section reverse">
+                <div class="feature-content">
+                    <h2>Short Leave Tracking</h2>
+                    <p class="section-subtitle">Short breaks and partial leave requests are seamlessly managed with our system. Employees can request short leaves, and managers get instant notifications to approve or deny them.</p>
+                    <a href="#contact" class="cta-button">Learn More</a>
+                </div>
+                <div class="short-leave-demo">
+                    <div class="leave-request-list">
+                        <div class="leave-request">
+                            <div class="user-avatar">AM</div>
+                            <div class="request-details">
+                                <div>Amit requested 2 hours leave</div>
+                                <div class="request-time">Today, 2:00 PM - 4:00 PM</div>
+                            </div>
+                        </div>
+                        <div class="leave-request">
+                            <div class="user-avatar">SP</div>
+                            <div class="request-details">
+                                <div>Sarah requested half-day leave</div>
+                                <div class="request-time">Tomorrow, After 2:00 PM</div>
+                            </div>
+                        </div>
+                        <div class="leave-request">
+                            <div class="user-avatar">RK</div>
+                            <div class="request-details">
+                                <div>Rahul requested short break</div>
+                                <div class="request-time">Today, 3:30 PM - 4:00 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loan Management Section -->
+    <section id="loan" class="section">
+        <div class="container">
+            <div class="feature-section">
+                <div class="feature-content">
+                    <h2>Loan Management</h2>
+                    <p class="section-subtitle">Easily track employee loans, deductions, and repayments. Our system automatically deducts installments from salaries, providing clarity and efficiency.</p>
+                    <a href="#contact" class="cta-button">Learn More</a>
+                </div>
+                <div class="loan-calculator">
+                    <div class="loan-slider">
+                        <div class="slider-header">
+                            <span>Loan Amount</span>
+                            <span>₹60,000</span>
+                        </div>
+                        <div class="loan-amount-bar">
+                            <div class="loan-amount-progress"></div>
+                        </div>
+                    </div>
+                    <div class="loan-details">
+                        <div class="loan-detail-item">
+                            <div class="value">12</div>
+                            <div>Months</div>
+                        </div>
+                        <div class="loan-detail-item">
+                            <div class="value">₹5,000</div>
+                            <div>EMI</div>
+                        </div>
+                        <div class="loan-detail-item">
+                            <div class="value">8%</div>
+                            <div>Interest</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additions & Deductions Section -->
+    <section id="additions" class="section bg-light">
+        <div class="content-wrapper">
+            <div class="feature-section reverse">
+                <div class="feature-content">
+                    <h2>Additions & Deductions</h2>
+                    <p class="section-subtitle">From bonuses to tax deductions, our system handles all salary components with accuracy, ensuring compliance and transparency.</p>
+                    <a href="#contact" class="cta-button">Learn More</a>
+                </div>
+                <div class="additions-demo">
+                    <div class="salary-breakdown">
+                        <div class="salary-component">
+                            <h4>Performance Bonus</h4>
+                            <div class="amount">+₹15,000</div>
+                        </div>
+                        <div class="salary-component">
+                            <h4>Overtime</h4>
+                            <div class="amount">+₹5,000</div>
+                        </div>
+                        <div class="salary-component">
+                            <h4>Tax Deduction</h4>
+                            <div class="amount">-₹8,500</div>
+                        </div>
+                        <div class="salary-component">
+                            <h4>Loan EMI</h4>
+                            <div class="amount">-₹5,000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Notifications Section -->
+    <section id="whatsapp" class="section">
+        <div class="container">
+            <div class="feature-section">
+                <div class="feature-content">
+                    <h2>WhatsApp Notifications</h2>
+                    <p class="section-subtitle">Get instant salary slips, attendance alerts, and payroll updates directly on WhatsApp. Keep employees informed in real time.</p>
+                    <a href="#contact" class="cta-button">Learn More</a>
+                </div>
+                <div class="whatsapp-demo">
+                    <div class="whatsapp-messages">
+                        <div class="whatsapp-message received">
+                            Hi Rahul, your salary for March 2024 has been credited: ₹45,000
+                        </div>
+                        <div class="whatsapp-message sent">
+                            Thank you! Can I get my salary slip?
+                        </div>
+                        <div class="whatsapp-message received">
+                            Here's your March 2024 salary slip 📄
+                            Click to download
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- All-in-One Solution Section -->
+    <section id="allinone" class="section bg-light">
+        <div class="content-wrapper">
+            <div class="feature-section reverse">
+                <div class="feature-content">
+                    <h2 class="fade-up">All-in-One Solution</h2>
+                    <p class="section-subtitle fade-up stagger-delay-1">A comprehensive system that covers attendance, payroll, leave management, and compliance, all in one easy-to-use platform.</p>
+                    <a href="#contact" class="cta-button fade-up stagger-delay-2">Learn More</a>
+                </div>
+                <div class="allinone-demo fade-in stagger-delay-3">
+                    <div class="integration-grid">
+                        <div class="integration-item slide-in-left stagger-delay-1">
+                            <div class="integration-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h4>HR Management</h4>
+                            <p>Employee Data</p>
+                            <div class="integration-lines"></div>
+                        </div>
+                        <div class="integration-item slide-in-left stagger-delay-2">
+                            <div class="integration-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4>Time Tracking</h4>
+                            <p>Attendance System</p>
+                            <div class="integration-lines"></div>
+                        </div>
+                        <div class="integration-item slide-in-left stagger-delay-3">
+                            <div class="integration-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <h4>Payroll</h4>
+                            <p>Salary Management</p>
+                        </div>
+                        <div class="integration-item slide-in-right stagger-delay-1">
+                            <div class="integration-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h4>Leave Management</h4>
+                            <p>Time Off Tracking</p>
+                            <div class="integration-lines"></div>
+                        </div>
+                        <div class="integration-item slide-in-right stagger-delay-2">
+                            <div class="integration-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h4>Reports</h4>
+                            <p>Analytics Dashboard</p>
+                            <div class="integration-lines"></div>
+                        </div>
+                        <div class="integration-item slide-in-right stagger-delay-3">
+                            <div class="integration-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h4>Compliance</h4>
+                            <p>Legal Requirements</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Easy to Use Section -->
+    <section id="easyuse" class="section">
+        <div class="container">
+            <div class="feature-section">
+                <div class="feature-content">
+                    <h2 class="fade-up">Easy to Use</h2>
+                    <p class="section-subtitle fade-up stagger-delay-1">Designed with simplicity in mind, our platform ensures that even non-technical users can navigate it effortlessly.</p>
+                    <a href="#contact" class="cta-button fade-up stagger-delay-2">Learn More</a>
+                </div>
+                <div class="easyuse-demo fade-in stagger-delay-3">
+                    <div class="interface-preview">
+                        <div class="interface-card scale-up stagger-delay-1">
+                            <div class="interface-icon">
+                                <i class="fas fa-mouse-pointer"></i>
+                            </div>
+                            <div class="interface-content">
+                                <h4>Intuitive Interface</h4>
+                                <p>Clean and simple navigation</p>
+                            </div>
+                        </div>
+                        <div class="interface-card scale-up stagger-delay-2">
+                            <div class="interface-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="interface-content">
+                                <h4>Mobile Friendly</h4>
+                                <p>Access from any device</p>
+                            </div>
+                        </div>
+                        <div class="interface-card scale-up stagger-delay-3">
+                            <div class="interface-icon">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <div class="interface-content">
+                                <h4>Smart Automation</h4>
+                                <p>Automated workflows</p>
+                            </div>
+                        </div>
+                        <div class="interface-card scale-up stagger-delay-4">
+                            <div class="interface-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="interface-content">
+                                <h4>Quick Learning</h4>
+                                <p>Minimal training needed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- World-Class Support Section -->
+    <section id="support" class="section bg-light">
+        <div class="content-wrapper">
+            <div class="feature-section reverse">
+                <div class="feature-content">
+                    <h2>World-Class Support</h2>
+                    <p class="section-subtitle">Our dedicated team is available round-the-clock to assist you with any queries, ensuring a smooth experience.</p>
+                    <a href="#contact" class="cta-button">Learn More</a>
+                </div>
+                <div class="support-demo">
+                    <div class="support-stats">
+                        <div class="stat-card">
+                            <div class="value">24/7</div>
+                            <div>Support</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value">&lt;1hr</div>
+                            <div>Response Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value">99%</div>
+                            <div>Satisfaction</div>
+                        </div>
+                    </div>
+                    <div class="support-channels">
+                        <div class="channel-card">
+                            <i class="fas fa-phone-alt"></i>
+                            <div>
+                                <h4>Phone Support</h4>
+                                <p>Direct line to experts</p>
+                            </div>
+                        </div>
+                        <div class="channel-card">
+                            <i class="fas fa-comments"></i>
+                            <div>
+                                <h4>Live Chat</h4>
+                                <p>Instant messaging</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Face Clock Section -->
+    <section id="faceclock" class="section bg-light">
+        <div class="content-wrapper">
+            <h2>Face Clock - AI-Powered Attendance Tracking</h2>
+            <p class="section-subtitle">Revolutionizing Attendance Management</p>
+            <div class="feature-grid">
+                <div class="feature-card" data-aos="fade-up">
+                    <i class="fas fa-globe"></i>
+                    <h3>Anywhere Access</h3>
+                    <p>Mark attendance from any location without physical constraints</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fas fa-bell"></i>
+                    <h3>Instant Notifications</h3>
+                    <p>Real-time alerts for employee check-ins and check-outs</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Geo & Time-Based Tracking</h3>
+                    <p>Ensure accurate attendance tracking with GPS tagging and timestamps</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>No Hardware Needed</h3>
+                    <p>Eliminate costs and dependency on biometric machines</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <i class="fas fa-desktop"></i>
+                    <h3>Multi-Platform Support</h3>
+                    <p>Use it on mobile devices or desktops effortlessly</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                    <i class="fas fa-users"></i>
+                    <h3>Perfect for All Teams</h3>
+                    <p>Works for field staff, remote employees, and office teams alike</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- USP Section -->
+    <section id="usp" class="section">
+        <div class="container">
+            <h2>Our USP - Anywhere & Instant</h2>
+            <div class="usp-grid">
+                <div class="usp-card" data-aos="fade-up">
+                    <i class="fas fa-wifi"></i>
+                    <h3>100% Digital & Wireless</h3>
+                    <p>No installation hassles, just login and start tracking</p>
+                </div>
+                <div class="usp-card" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fas fa-building"></i>
+                    <h3>Remote & Multi-Location Support</h3>
+                    <p>Manage attendance across multiple locations</p>
+                </div>
+                <div class="usp-card" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fas fa-clock"></i>
+                    <h3>Real-Time Data</h3>
+                    <p>Instant access to reports, tracking, and notifications</p>
+                </div>
+                <div class="usp-card" data-aos="fade-up" data-aos-delay="300">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Tamper-Proof System</h3>
+                    <p>Ensures authentic attendance, preventing fraudulent check-ins</p>
+                </div>
+                <div class="usp-card" data-aos="fade-up" data-aos-delay="400">
+                    <i class="fas fa-sync"></i>
+                    <h3>Seamless Integration</h3>
+                    <p>Sync with payroll and HR systems effortlessly</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payroll Section -->
+    <section id="payroll" class="section bg-light">
+        <div class="content-wrapper">
+            <h2>Outsource Payroll – Leave Everything to Us</h2>
+            <p class="section-subtitle">Comprehensive Payroll Management</p>
+            <div class="payroll-features">
+                <div class="payroll-card" data-aos="fade-up">
+                    <i class="fas fa-calculator"></i>
+                    <h3>Salary Processing</h3>
+                    <p>Calculate salaries automatically based on attendance data</p>
+                </div>
+                <div class="payroll-card" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h3>Deductions & Additions</h3>
+                    <p>Manage PF, ESI, taxes, incentives, bonuses, loans, and advances</p>
+                </div>
+                <div class="payroll-card" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Leaves & Short Leaves</h3>
+                    <p>Handle leave policies, absenteeism deductions, and compliance</p>
+                </div>
+                <div class="payroll-card" data-aos="fade-up" data-aos-delay="300">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>100% Compliance</h3>
+                    <p>Stay legally compliant with all labor laws</p>
+                </div>
+                <div class="payroll-card" data-aos="fade-up" data-aos-delay="400">
+                    <i class="fas fa-lock"></i>
+                    <h3>Confidential & Secure</h3>
+                    <p>No office staff can manipulate payroll data, ensuring full security</p>
+                </div>
+                <div class="payroll-card" data-aos="fade-up" data-aos-delay="500">
+                    <i class="fas fa-file-invoice"></i>
+                    <h3>Payslip Generation & Tax Reports</h3>
+                    <p>Employees receive digital payslips and tax statements on time</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="section">
+        <div class="container">
+            <h2>Pricing</h2>
+            <div class="pricing-tables">
+                <div class="pricing-category">
+                    <h3>Attendance Management Pricing</h3>
+                    <div class="pricing-cards">
+                        <div class="pricing-card" data-aos="fade-up">
+                            <h4>Less than 50 users</h4>
+                            <div class="price">₹15,000</div>
+                            <div class="price-subtitle">One-time</div>
+                            <div class="price-detail">+ ₹7,500/year (Annual Maintenance)</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="100">
+                            <h4>100-200 users</h4>
+                            <div class="price">₹25,000</div>
+                            <div class="price-subtitle">One-time</div>
+                            <div class="price-detail">+ ₹12,500/year (Annual Maintenance)</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="200">
+                            <h4>200-500 users</h4>
+                            <div class="price">₹40,000</div>
+                            <div class="price-subtitle">One-time</div>
+                            <div class="price-detail">+ ₹20,000/year (Annual Maintenance)</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="300">
+                            <h4>500-1000 users</h4>
+                            <div class="price">₹60,000</div>
+                            <div class="price-subtitle">One-time</div>
+                            <div class="price-detail">+ ₹30,000/year (Annual Maintenance)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pricing-category">
+                    <h3>Payroll Outsourcing Pricing</h3>
+                    <div class="pricing-cards">
+                        <div class="pricing-card" data-aos="fade-up">
+                            <h4>Less than 50 Users</h4>
+                            <div class="price">₹6,000</div>
+                            <div class="price-subtitle">per month</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="100">
+                            <h4>50-100 Users</h4>
+                            <div class="price">₹8,000</div>
+                            <div class="price-subtitle">per month</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="200">
+                            <h4>100-200 Users</h4>
+                            <div class="price">₹14,000</div>
+                            <div class="price-subtitle">per month</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="300">
+                            <h4>200-300 Users</h4>
+                            <div class="price">₹20,000</div>
+                            <div class="price-subtitle">per month</div>
+                        </div>
+                        <div class="pricing-card" data-aos="fade-up" data-aos-delay="400">
+                            <h4>300-400 Users</h4>
+                            <div class="price">₹25,000</div>
+                            <div class="price-subtitle">per month</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="section bg-light">
+        <div class="content-wrapper">
+            <h2>What Our Clients Say</h2>
+            <div class="testimonials-slider">
+                <div class="testimonial-card" data-aos="fade-up">
+                    <p>"This system has completely transformed our attendance and payroll management. No more manual errors! Highly recommended!"</p>
+                    <div class="testimonial-author">Rajesh M.</div>
+                    <div class="testimonial-position">HR Manager</div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                    <p>"The ability to track remote employees accurately has been a game-changer for us. Payroll processing is now stress-free!"</p>
+                    <div class="testimonial-author">Pooja S.</div>
+                    <div class="testimonial-position">Business Owner</div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                    <p>"Secure, efficient, and super easy to use. This is the best attendance system we've ever used!"</p>
+                    <div class="testimonial-author">Amit T.</div>
+                    <div class="testimonial-position">IT Head</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <div class="contact-grid">
+                <div class="office-info">
+                    <h3>Indian Office</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> 672 Mota Singh Nagar, Jalandhar, Punjab</p>
+                    <p><i class="fas fa-phone"></i> +91 7538 0000 90</p>
+                    <p><i class="fas fa-envelope"></i> contact@paezr.com</p>
+                </div>
+                <div class="office-info">
+                    <h3>Dubai Office</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> 36 B, Tower 11, Sports City, Dubai</p>
+                    <p><i class="fas fa-phone"></i> +971 50 763 3400</p>
+                    <p><i class="fas fa-envelope"></i> dubai@paezr.com</p>
+                </div>
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <input type="text" placeholder="Your Name" required>
+                        <input type="email" placeholder="Your Email" required>
+                        <input type="tel" placeholder="Phone Number" required>
+                        <textarea placeholder="Message" required></textarea>
+                        <button type="submit" class="cta-button">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Float Button -->
+    <a href="https://api.whatsapp.com/send?phone=917538000090" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="logo.png" alt="Logo" class="footer-logo">
+                    <p>Transform your HR operations with AI-powered solutions</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Quick Links</h4>
+                        <a href="#faceclock">Face Clock</a>
+                        <a href="#usp">Our USP</a>
+                        <a href="#payroll">Payroll</a>
+                        <a href="#pricing">Pricing</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Contact</h4>
+                        <a href="tel:+917538000090">+91 75380 00090</a>
+                        <a href="mailto:info@yourbusiness.in">info@yourbusiness.in</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Your Business. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 

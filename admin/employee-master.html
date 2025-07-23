@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Master</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #2196F3;
+        }
+
+        .welcome-message {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 70px auto 0;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1976D2;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #2196F3;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            background: none;
+        }
+
+        .edit-btn {
+            color: #4CAF50;
+        }
+
+        .delete-btn {
+            color: #f44336;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 32px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-result-item {
+            padding: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #2196F3;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #2196F3;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-filters input,
+        .search-filters select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .no-more {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.success {
+            background-color: rgba(76, 175, 80, 0.9);
+        }
+
+        .notification.error {
+            background-color: rgba(244, 67, 54, 0.9);
+        }
+
+        .notification i {
+            font-size: 20px;
+        }
+
+        .notification .timer {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+        }
+
+        .notification .timer-bar {
+            height: 100%;
+            background: white;
+            width: 100%;
+            transition: width 3s linear;
+        }
+    </style>
+</head>
+<body>
+    <div id="menuContainer"></div>
+
+    <div class="header">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="welcome-message" id="welcomeMessage"></div>
+    </div>
+
+    <div class="container">
+        <h1>Employee Master</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('form')">Add/Edit Employee</button>
+            <button class="tab" onclick="switchTab('list')">Employee List</button>
+        </div>
+
+        <div id="formTab" class="tab-content">
+            <div class="form-container">
+                <form id="employeeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="employeeName">Employee Name</label>
+                            <input type="text" id="employeeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="faceId">Company FaceID</label>
+                            <input type="text" id="faceId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyCode">Company Code</label>
+                            <input type="text" id="companyCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="aadharNo">Aadhar No.</label>
+                            <input type="text" id="aadharNo" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="esiNo">ESI No.</label>
+                            <input type="text" id="esiNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pfNo">PF No.</label>
+                            <input type="text" id="pfNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <select id="department" required>
+                                <option value="">Select Department</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="shift">Shift</label>
+                            <select id="shift" required>
+                                <option value="">Select Shift</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" required>
+                                <option value="">Select Status</option>
+                                <option value="A">Active (A)</option>
+                                <option value="F">Inactive (F)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Employee</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="listTab" class="tab-content" style="display: none;">
+            <div class="search-filters">
+                <input type="text" id="searchName" placeholder="Search by name...">
+                <input type="text" id="searchCompanyCode" placeholder="Search by company code...">
+                <input type="text" id="searchFaceId" placeholder="Search by face ID...">
+                <select id="filterDepartment">
+                    <option value="">All Departments</option>
+                </select>
+                <select id="filterShift">
+                    <option value="">All Shifts</option>
+                </select>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Face ID</th>
+                        <th>Company Code</th>
+                        <th>Aadhar No.</th>
+                        <th>ESI No.</th>
+                        <th>PF No.</th>
+                        <th>Department</th>
+                        <th>Shift</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTable"></tbody>
+            </table>
+            <div id="loading" class="loading" style="display: none;">Loading more employees...</div>
+            <div id="noMore" class="no-more">No more employees to load</div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationMessage"></span>
+        <div class="timer">
+            <div class="timer-bar"></div>
+        </div>
+    </div>
+
+    <!-- Add Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvTaQfcJsj7nGSOQxEdLjCbCenmDEC3Ns",
+            authDomain: "lovable-9c76e.firebaseapp.com",
+            projectId: "lovable-9c76e",
+            storageBucket: "lovable-9c76e.firebasestorage.app",
+            messagingSenderId: "670985612758",
+            appId: "1:670985612758:web:67928f8e0328d54c640877",
+            measurementId: "G-Q4X9B5HPJP"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Load the menu
+        fetch('menu.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('menuContainer').innerHTML = html;
+            });
+
+        // Load departments and employees when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            const userEmail = localStorage.getItem('userEmail');
+            const userId = localStorage.getItem('userId');
+            
+            if (!userEmail || !userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set welcome message
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${userEmail}`;
+            
+            // Load departments and employees
+            loadDepartments();
+            loadEmployees();
+            prefillCompanyFaceId();
+        });
+
+        // Function to prefill Company FaceID with Company Code
+        async function prefillCompanyFaceId() {
+            try {
+                const userId = localStorage.getItem('userId');
+                const userDoc = await db.collection('users').doc(userId).get();
+                
+                if (userDoc.exists && userDoc.data().companyCode) {
+                    const companyCode = userDoc.data().companyCode;
+                    document.getElementById('faceId').value = companyCode;
+                    document.getElementById('companyCode').value = companyCode;
+                }
+            } catch (error) {
+                console.error('Error prefilling Company FaceID:', error);
+            }
+        }
+
+        // Load shifts from shift master
+        async function loadShifts() {
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                const userId = localStorage.getItem('userId');
+                console.log('Loading shifts for user:', userId);
+                const userDoc = await db.collection('users').doc(userId).get();
+                const companyCode = userDoc.data().companyCode;
+                console.log('Company code:', companyCode);
+
+                const shiftsSnapshot = await db.collection('attendance')
+                    .doc('att')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('shifts')
+                    .get();
+
+                console.log('Shifts snapshot:', shiftsSnapshot.size, 'documents found');
+                const shiftSelect = document.getElementById('shift');
+                const filterShift = document.getElementById('filterShift');
+                shiftSelect.innerHTML = '<option value="">Select Shift</option>';
+                filterShift.innerHTML = '<option value="">All Shifts</option>';
+
+                shiftsSnapshot.forEach(doc => {
+                    const shift = doc.data();
+                    console.log('Shift data:', shift);
+                    const option = document.createElement('option');
+                    option.value = shift.name;
+                    option.textContent = shift.name;
+                    shiftSelect.appendChild(option.cloneNode(true));
+                    filterShift.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading shifts:', error);
+            }
+        }
+
+        // Load departments for dropdown
+        async function loadDepartments() {
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                const userId = localStorage.getItem('userId');
+                console.log('Loading departments for user:', userId);
+                const userDoc = await db.collection('users').doc(userId).get();
+                const companyCode = userDoc.data().companyCode;
+                console.log('Company code:', companyCode);
+
+                const deptSnapshot = await db.collection('attendance')
+                    .doc('att')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('dept')
+                    .get();
+
+                console.log('Departments snapshot:', deptSnapshot.size, 'documents found');
+                const departmentSelect = document.getElementById('department');
+                const filterDepartment = document.getElementById('filterDepartment');
+                departmentSelect.innerHTML = '<option value="">Select Department</option>';
+                filterDepartment.innerHTML = '<option value="">All Departments</option>';
+
+                deptSnapshot.forEach(doc => {
+                    const dept = doc.data();
+                    console.log('Department data:', dept);
+                    const option = document.createElement('option');
+                    option.value = dept.name;
+                    option.textContent = dept.name;
+                    departmentSelect.appendChild(option.cloneNode(true));
+                    filterDepartment.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        // Initialize
+        loadDepartments();
+        loadShifts();
+
+        let lastVisible = null;
+        let isLoading = false;
+        let hasMore = true;
+        const pageSize = 50;
+        let currentFilters = {
+            name: '',
+            companyCode: '',
+            faceId: '',
+            department: '',
+            shift: ''
+        };
+
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            if (tab === 'list') {
+                loadEmployees();
+            }
+        }
+
+        // Load employees with pagination and filters
+        async function loadEmployees(reset = false) {
+            if (isLoading || (!hasMore && !reset)) return;
+            
+            try {
+                isLoading = true;
+                document.getElementById('loading').style.display = 'block';
+                
+                const userEmail = localStorage.getItem('userEmail');
+                const userId = localStorage.getItem('userId');
+                const userDoc = await db.collection('users').doc(userId).get();
+                const companyCode = userDoc.data().companyCode;
+
+                let query = db.collection('attendance')
+                    .doc('att')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('empmaster');
+
+                // Apply filters
+                if (currentFilters.name) {
+                    query = query.where('employeeName', '>=', currentFilters.name)
+                               .where('employeeName', '<=', currentFilters.name + '\uf8ff');
+                }
+                if (currentFilters.companyCode) {
+                    query = query.where('companyCode', '>=', currentFilters.companyCode)
+                               .where('companyCode', '<=', currentFilters.companyCode + '\uf8ff');
+                }
+                if (currentFilters.faceId) {
+                    query = query.where('faceId', '>=', currentFilters.faceId)
+                               .where('faceId', '<=', currentFilters.faceId + '\uf8ff');
+                }
+                if (currentFilters.department) {
+                    query = query.where('department', '==', currentFilters.department);
+                }
+                if (currentFilters.shift) {
+                    query = query.where('shift', '==', currentFilters.shift);
+                }
+
+                // Add ordering and pagination
+                query = query.orderBy('createdAt', 'desc').limit(pageSize);
+
+                if (!reset && lastVisible) {
+                    query = query.startAfter(lastVisible);
+                }
+
+                const snapshot = await query.get();
+                
+                if (snapshot.empty) {
+                    hasMore = false;
+                    document.getElementById('noMore').style.display = 'block';
+                    return;
+                }
+
+                lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                const tbody = document.getElementById('employeeTable');
+                
+                if (reset) {
+                    tbody.innerHTML = '';
+                }
+
+                snapshot.forEach(doc => {
+                    const employee = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${employee.employeeName}</td>
+                        <td>${employee.faceId}</td>
+                        <td>${employee.companyCode}</td>
+                        <td>${employee.aadharNo}</td>
+                        <td>${employee.esiNo}</td>
+                        <td>${employee.pfNo}</td>
+                        <td>${employee.department}</td>
+                        <td>${employee.shift}</td>
+                        <td>${employee.status}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="editEmployee('${doc.id}')">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteEmployee('${doc.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading employees:', error);
+            } finally {
+                isLoading = false;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Search and filter functionality
+        document.getElementById('searchName').addEventListener('input', debounce(function() {
+            currentFilters.name = this.value.toLowerCase();
+            hasMore = true;
+            lastVisible = null;
+            loadEmployees(true);
+        }, 500));
+
+        document.getElementById('searchCompanyCode').addEventListener('input', debounce(function() {
+            currentFilters.companyCode = this.value.toLowerCase();
+            hasMore = true;
+            lastVisible = null;
+            loadEmployees(true);
+        }, 500));
+
+        document.getElementById('searchFaceId').addEventListener('input', debounce(function() {
+            currentFilters.faceId = this.value.toLowerCase();
+            hasMore = true;
+            lastVisible = null;
+            loadEmployees(true);
+        }, 500));
+
+        document.getElementById('filterDepartment').addEventListener('change', function() {
+            currentFilters.department = this.value;
+            hasMore = true;
+            lastVisible = null;
+            loadEmployees(true);
+        });
+
+        document.getElementById('filterShift').addEventListener('change', function() {
+            currentFilters.shift = this.value;
+            hasMore = true;
+            lastVisible = null;
+            loadEmployees(true);
+        });
+
+        // Debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Infinite scroll
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000) {
+                loadEmployees();
+            }
+        });
+
+        // Edit employee
+        async function editEmployee(docId) {
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                const userId = localStorage.getItem('userId');
+                const userDoc = await db.collection('users').doc(userId).get();
+                const companyCode = userDoc.data().companyCode;
+
+                const doc = await db.collection('attendance')
+                    .doc('att')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('empmaster')
+                    .doc(docId)
+                    .get();
+
+                const employee = doc.data();
+                
+                document.getElementById('employeeName').value = employee.employeeName;
+                document.getElementById('faceId').value = employee.faceId;
+                document.getElementById('companyCode').value = employee.companyCode;
+                document.getElementById('aadharNo').value = employee.aadharNo;
+                document.getElementById('esiNo').value = employee.esiNo;
+                document.getElementById('pfNo').value = employee.pfNo;
+                document.getElementById('department').value = employee.department;
+                document.getElementById('shift').value = employee.shift;
+                document.getElementById('status').value = employee.status;
+
+                // Store the document ID for update
+                document.getElementById('employeeForm').dataset.editId = docId;
+                
+                // Switch to form tab
+                switchTab('form');
+            } catch (error) {
+                console.error('Error loading employee:', error);
+                alert('Error loading employee details. Please try again.');
+            }
+        }
+
+        // Show notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notificationMessage');
+            const timerBar = notification.querySelector('.timer-bar');
+            
+            notification.className = `notification ${type}`;
+            messageEl.textContent = message;
+            
+            // Reset timer bar
+            timerBar.style.width = '100%';
+            
+            // Show notification
+            notification.classList.add('show');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Update form submission to handle both create and update
+        document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userEmail = localStorage.getItem('userEmail');
+            const userId = localStorage.getItem('userId');
+            const userDoc = await db.collection('users').doc(userId).get();
+            const companyCode = userDoc.data().companyCode;
+
+            const employeeData = {
+                employeeName: document.getElementById('employeeName').value,
+                faceId: document.getElementById('faceId').value,
+                companyCode: document.getElementById('companyCode').value,
+                aadharNo: document.getElementById('aadharNo').value,
+                esiNo: document.getElementById('esiNo').value,
+                pfNo: document.getElementById('pfNo').value,
+                department: document.getElementById('department').value,
+                shift: document.getElementById('shift').value,
+                status: document.getElementById('status').value,
+                updatedAt: new Date()
+            };
+
+            try {
+                const editId = this.dataset.editId;
+                if (editId) {
+                    // Update existing employee
+                    await db.collection('attendance')
+                        .doc('att')
+                        .collection(companyCode)
+                        .doc('masters')
+                        .collection('empmaster')
+                        .doc(editId)
+                        .update(employeeData);
+                    showNotification('Employee updated successfully!');
+                } else {
+                    // Create new employee
+                    employeeData.createdAt = new Date();
+                    await db.collection('attendance')
+                        .doc('att')
+                        .collection(companyCode)
+                        .doc('masters')
+                        .collection('empmaster')
+                        .add(employeeData);
+                    showNotification('Employee added successfully!');
+                }
+
+                this.reset();
+                delete this.dataset.editId;
+                loadEmployees(true); // Reset the list
+            } catch (error) {
+                console.error('Error saving employee:', error);
+                showNotification('Error saving employee. Please try again.', 'error');
+            }
+        });
+
+        // Function to delete an employee
+        async function deleteEmployee(docId) {
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                const userId = localStorage.getItem('userId');
+                const userDoc = await db.collection('users').doc(userId).get();
+                const companyCode = userDoc.data().companyCode;
+
+                await db.collection('attendance')
+                    .doc('att')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('empmaster')
+                    .doc(docId)
+                    .delete();
+
+                showNotification('Employee deleted successfully!', 'success');
+                loadEmployees(true);
+            } catch (error) {
+                console.error('Error deleting employee:', error);
+                showNotification('Error deleting employee. Please try again.', 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

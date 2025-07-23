@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDIBULL Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #2196F3;
+        }
+
+        .welcome-message {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 70px auto 0;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .btn.update {
+            background-color: #2196F3;
+        }
+
+        .btn.update:hover {
+            background-color: #1976D2;
+        }
+
+        .btn.delete {
+            background-color: #f44336;
+        }
+
+        .btn.delete:hover {
+            background-color: #d32f2f;
+        }
+
+        .version {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        /* Tabs styling */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #2196F3;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #2196F3;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Face folders list styling */
+        .face-folders-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .face-folder-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .face-folder-item:last-child {
+            border-bottom: none;
+        }
+
+        .face-folder-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .face-folder-item label {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        /* Backup card styling */
+        .backup-info {
+            margin-bottom: 20px;
+        }
+
+        .backup-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .backup-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .backup-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .backup-status.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+
+        .backup-status.error {
+            background-color: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+
+        /* Geo Fence styling */
+        .geo-fence-form {
+            margin-top: 20px;
+        }
+
+        .geo-fence-form .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .geo-fence-form .form-group {
+            flex: 1;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.success {
+            background-color: rgba(76, 175, 80, 0.9);
+        }
+
+        .notification.error {
+            background-color: rgba(244, 67, 54, 0.9);
+        }
+
+        .notification i {
+            font-size: 20px;
+        }
+
+        .notification .timer {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+        }
+
+        .notification .timer-bar {
+            height: 100%;
+            background: white;
+            width: 100%;
+            transition: width 2s linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="welcome-message" id="welcomeMessage"></div>
+    </div>
+
+    <!-- Include the shared menu -->
+    <div id="menuContainer"></div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('settings')">Settings</button>
+            <button class="tab" onclick="switchTab('geoFence')">Geo Fence</button>
+            <button class="tab" onclick="switchTab('deleteFaces')">Delete Faces</button>
+            <button class="tab" onclick="switchTab('backupFaces')">Backup Faces</button>
+        </div>
+
+        <div id="settingsTab" class="tab-content active">
+            <div class="card">
+                <h1>Settings</h1>
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label for="companyCode">Company Code</label>
+                        <input type="text" id="companyCode" required>
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="geoFenceTab" class="tab-content">
+            <div class="card">
+                <h1>Geo Fence Settings</h1>
+                <form id="geoFenceForm" class="geo-fence-form">
+                    <div class="form-group">
+                        <label for="geoFenceEnabled">Geo Fence</label>
+                        <select id="geoFenceEnabled" required>
+                            <option value="false">Disable</option>
+                            <option value="true">Enable</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="geoFenceDistance">Geo Fence Distance (meters)</label>
+                        <select id="geoFenceDistance" required>
+                            <option value="50">50 meters</option>
+                            <option value="100">100 meters</option>
+                            <option value="200">200 meters</option>
+                            <option value="300">300 meters</option>
+                            <option value="400">400 meters</option>
+                            <option value="500">500 meters</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="geoFenceLat">Latitude</label>
+                            <input type="text" id="geoFenceLat" placeholder="e.g., 12.9716" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="geoFenceLng">Longitude</label>
+                            <input type="text" id="geoFenceLng" placeholder="e.g., 77.5946" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" id="geoFenceSubmitBtn">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="deleteFacesTab" class="tab-content">
+            <div class="card">
+                <h1>Delete Faces</h1>
+                <p>Select the face folders you want to delete:</p>
+                <div id="faceFoldersList" class="face-folders-list">
+                    <div class="loading">Loading face folders...</div>
+                </div>
+                <button id="deleteFacesBtn" class="btn delete" disabled>Delete Selected</button>
+                <div id="deleteStatus" class="backup-status"></div>
+            </div>
+        </div>
+
+        <div id="backupFacesTab" class="tab-content">
+            <div class="card">
+                <h1>Backup Faces</h1>
+                <div class="backup-info">
+                    <p>This will create a backup of all face folders for your company.</p>
+                    <p>The backup will be named with today's date (e.g., 2024-04-01-backup.zip)</p>
+                </div>
+                <div class="backup-actions">
+                    <button id="createBackupBtn" class="btn">Create Backup</button>
+                    <a id="downloadBackupBtn" class="btn" style="display: none;" download>Download Backup</a>
+                </div>
+                <div id="backupStatus" class="backup-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="version">(Version 0.0.4)</div>
+
+    <!-- Notification element -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationMessage"></span>
+        <div class="timer">
+            <div class="timer-bar"></div>
+        </div>
+    </div>
+
+    <!-- Add Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    <script src="menu.js"></script>
+    <script>
+        // Define switchTab function in the global scope
+        window.switchTab = function(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Deactivate all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activate the selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Load face folders if on delete faces tab
+            if (tabName === 'deleteFaces') {
+                loadFaceFolders();
+            }
+        }
+
+        // Toggle menu function - added to fix menu toggle issue
+        function toggleMenu() {
+            const menu = document.querySelector('.side-menu');
+            if (menu) {
+                menu.classList.toggle('active');
+            }
+        }
+
+        // Load the menu
+        fetch('menu.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('menuContainer').innerHTML = html;
+            });
+
+        // Check authentication - use existing userEmail from menu.js
+        const userId = localStorage.getItem('userId');
+        
+        if (!userEmail || !userId) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${userEmail}`;
+        }
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvTaQfcJsj7nGSOQxEdLjCbCenmDEC3Ns",
+            authDomain: "lovable-9c76e.firebaseapp.com",
+            projectId: "lovable-9c76e",
+            storageBucket: "lovable-9c76e.firebasestorage.app",
+            messagingSenderId: "670985612758",
+            appId: "1:670985612758:web:67928f8e0328d54c640877",
+            measurementId: "G-Q4X9B5HPJP"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Clear any existing value first to prevent showing cached/default values
+        document.getElementById('companyCode').value = '';
+        
+        // Load existing company code from localStorage only
+        const storedCompanyCode = localStorage.getItem('companyCode');
+        if (storedCompanyCode && storedCompanyCode.trim() !== '') {
+            document.getElementById('companyCode').value = storedCompanyCode;
+            document.getElementById('submitBtn').textContent = 'Update';
+            document.getElementById('submitBtn').classList.add('update');
+            
+            // Load geo fence settings
+            loadGeoFenceSettings(storedCompanyCode);
+        } else {
+            // Clear localStorage if it contains empty/invalid value
+            if (storedCompanyCode === '') {
+                localStorage.removeItem('companyCode');
+            }
+            // Field will remain empty for user to enter company code
+        }
+
+        // Handle settings form submission
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const companyCode = document.getElementById('companyCode').value;
+
+            if (!companyCode.trim()) {
+                showNotification('Please enter a company code.', 'error');
+                return;
+            }
+
+            try {
+                // Save to the correct Firestore path
+                await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('users')
+                    .doc(userId)
+                    .set({
+                        companyCode: companyCode,
+                        email: userEmail,
+                        lastUpdated: new Date()
+                    }, { merge: true });
+
+                // Also save to localStorage
+                localStorage.setItem('companyCode', companyCode);
+
+                // Fetch userlevel and userRights from Firestore and save to localStorage
+                const userDocRef = db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('users')
+                    .doc(userId);
+                const userDoc = await userDocRef.get();
+                if (userDoc.exists) {
+                    const data = userDoc.data();
+                    localStorage.setItem('userlevel', data.userlevel || 'user');
+                    localStorage.setItem('userRights', (data.userRights || []).join(','));
+                    // Optionally redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showNotification('User record not found for this company.', 'error');
+                }
+
+                // Update button text
+                document.getElementById('submitBtn').textContent = 'Update';
+                document.getElementById('submitBtn').classList.add('update');
+
+                showNotification('Settings saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showNotification('Error saving settings. Please try again.', 'error');
+            }
+        });
+
+        // Add event listener to clear field when user starts typing
+        document.getElementById('companyCode').addEventListener('input', function() {
+            // If user is typing and the field was previously empty, change button text
+            if (this.value.trim() !== '') {
+                document.getElementById('submitBtn').textContent = 'Save';
+                document.getElementById('submitBtn').classList.remove('update');
+            } else {
+                document.getElementById('submitBtn').textContent = 'Save';
+                document.getElementById('submitBtn').classList.remove('update');
+            }
+        });
+
+        // Load geo fence settings
+        async function loadGeoFenceSettings(companyCode) {
+            try {
+                const doc = await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('companysettings')
+                    .get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('geoFenceEnabled').value = data.geoFenceEnabled ? 'true' : 'false';
+                    document.getElementById('geoFenceDistance').value = data.geoFenceDistance || '100';
+                    document.getElementById('geoFenceLat').value = data.geoFenceLat || '';
+                    document.getElementById('geoFenceLng').value = data.geoFenceLng || '';
+                    
+                    // Change button text to Update
+                    document.getElementById('geoFenceSubmitBtn').textContent = 'Update';
+                    document.getElementById('geoFenceSubmitBtn').classList.add('update');
+                }
+            } catch (error) {
+                console.error('Error loading geo fence settings:', error);
+            }
+        }
+
+        // Handle geo fence form submission
+        document.getElementById('geoFenceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const companyCode = document.getElementById('companyCode').value;
+            if (!companyCode) {
+                showNotification('Please set your Company Code in Settings first.', 'error');
+                return;
+            }
+            
+            const geoFenceEnabled = document.getElementById('geoFenceEnabled').value === 'true';
+            const geoFenceDistance = parseInt(document.getElementById('geoFenceDistance').value);
+            const geoFenceLat = parseFloat(document.getElementById('geoFenceLat').value);
+            const geoFenceLng = parseFloat(document.getElementById('geoFenceLng').value);
+            
+            try {
+                await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('companysettings')
+                    .set({
+                        geoFenceEnabled: geoFenceEnabled,
+                        geoFenceDistance: geoFenceDistance,
+                        geoFenceLat: geoFenceLat,
+                        geoFenceLng: geoFenceLng,
+                        lastUpdated: new Date()
+                    }, { merge: true });
+                
+                showNotification('Geo fence settings saved successfully!', 'success');
+                
+                // Change button text to Update
+                document.getElementById('geoFenceSubmitBtn').textContent = 'Update';
+                document.getElementById('geoFenceSubmitBtn').classList.add('update');
+            } catch (error) {
+                console.error('Error saving geo fence settings:', error);
+                showNotification('Error saving geo fence settings. Please try again.', 'error');
+            }
+        });
+
+        // Show notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notificationMessage');
+            const timerBar = notification.querySelector('.timer-bar');
+            
+            notification.className = `notification ${type}`;
+            messageEl.textContent = message;
+            
+            // Reset timer bar
+            timerBar.style.width = '100%';
+            
+            // Show notification
+            notification.classList.add('show');
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Load face folders for the company
+        async function loadFaceFolders() {
+            const faceFoldersList = document.getElementById('faceFoldersList');
+            faceFoldersList.innerHTML = '<div class="loading">Loading face folders...</div>';
+            
+            try {
+                const companyCode = document.getElementById('companyCode').value;
+                if (!companyCode) {
+                    faceFoldersList.innerHTML = '<div class="error">Please set your Company Code in Settings first.</div>';
+                    return;
+                }
+                
+                // Fetch the list of face folders from the server
+                const response = await fetch(`get_face_folders.php?companyCode=${companyCode}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.folders.length === 0) {
+                        faceFoldersList.innerHTML = '<div class="empty">No face folders found.</div>';
+                    } else {
+                        let html = '';
+                        data.folders.forEach(folder => {
+                            html += `
+                                <div class="face-folder-item">
+                                    <input type="checkbox" id="folder_${folder}" name="folders[]" value="${folder}">
+                                    <label for="folder_${folder}">${folder}</label>
+                                </div>
+                            `;
+                        });
+                        faceFoldersList.innerHTML = html;
+                        
+                        // Add event listeners to checkboxes
+                        document.querySelectorAll('input[name="folders[]"]').forEach(checkbox => {
+                            checkbox.addEventListener('change', updateDeleteButton);
+                        });
+                    }
+                } else {
+                    faceFoldersList.innerHTML = `<div class="error">${data.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading face folders:', error);
+                faceFoldersList.innerHTML = '<div class="error">Error loading face folders. Please try again.</div>';
+            }
+        }
+
+        // Update delete button state based on checkbox selection
+        function updateDeleteButton() {
+            const checkedBoxes = document.querySelectorAll('input[name="folders[]"]:checked');
+            const deleteBtn = document.getElementById('deleteFacesBtn');
+            
+            if (checkedBoxes.length > 0) {
+                deleteBtn.disabled = false;
+            } else {
+                deleteBtn.disabled = true;
+            }
+        }
+
+        // Handle delete faces button click
+        document.getElementById('deleteFacesBtn').addEventListener('click', async () => {
+            const checkedBoxes = document.querySelectorAll('input[name="folders[]"]:checked');
+            const foldersToDelete = Array.from(checkedBoxes).map(cb => cb.value);
+            const companyCode = document.getElementById('companyCode').value;
+            
+            if (foldersToDelete.length === 0) {
+                showNotification('Please select at least one folder to delete.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('deletefaces.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        companyCode: companyCode,
+                        folders: foldersToDelete
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`Successfully deleted ${foldersToDelete.length} folder(s).`, 'success');
+                    loadFaceFolders(); // Reload the list
+                } else {
+                    showNotification(data.message || 'Error deleting folders.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting folders:', error);
+                showNotification('Error deleting folders. Please try again.', 'error');
+            }
+        });
+
+        // Handle create backup button click
+        document.getElementById('createBackupBtn').addEventListener('click', async () => {
+            const companyCode = document.getElementById('companyCode').value;
+            const backupStatus = document.getElementById('backupStatus');
+            const downloadBackupBtn = document.getElementById('downloadBackupBtn');
+            
+            if (!companyCode) {
+                backupStatus.textContent = 'Please set your Company Code in Settings first.';
+                backupStatus.className = 'backup-status error';
+                return;
+            }
+            
+            backupStatus.textContent = 'Creating backup...';
+            backupStatus.className = 'backup-status';
+            downloadBackupBtn.style.display = 'none';
+            
+            try {
+                const response = await fetch('backupfaces.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        companyCode: companyCode
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    backupStatus.textContent = 'Backup created successfully!';
+                    backupStatus.className = 'backup-status success';
+                    downloadBackupBtn.href = data.downloadUrl;
+                    downloadBackupBtn.style.display = 'inline-block';
+                } else {
+                    backupStatus.textContent = data.message || 'Error creating backup.';
+                    backupStatus.className = 'backup-status error';
+                }
+            } catch (error) {
+                console.error('Error creating backup:', error);
+                backupStatus.textContent = 'Error creating backup. Please try again.';
+                backupStatus.className = 'backup-status error';
+            }
+        });
+    </script>
+</body>
+</html> 
