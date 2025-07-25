@@ -535,6 +535,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    
+    <!-- Version Management -->
     <script src="menu.js"></script>
     <script>
         // Firebase configuration
@@ -553,12 +555,15 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Load the menu
-        fetch('menu.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('menuContainer').innerHTML = html;
-            });
+        // Load the menu with cache busting
+        function loadMenu() {
+            const cacheBuster = window.getCacheBuster ? window.getCacheBuster() : '?v=1.0.3&t=' + Date.now();
+            fetch('menu.html' + cacheBuster)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('menuContainer').innerHTML = html;
+                });
+        }
 
         // Variables for pagination and search
         let lastVisible = null;
@@ -586,6 +591,9 @@
                 return;
             }
             
+            // Load menu first
+            loadMenu();
+            
             // Set welcome message
             document.getElementById('welcomeMessage').textContent = `Welcome, ${userEmail}`;
             
@@ -601,7 +609,20 @@
 
             // Add search event listeners
             setupSearchListeners();
+            
+            // Check for updates
+            if (window.VersionManager) {
+                VersionManager.checkForUpdates();
+            }
         });
+
+        // Toggle menu function (fallback)
+        window.toggleMenu = function() {
+            const menu = document.querySelector('.side-menu');
+            if (menu) {
+                menu.classList.toggle('active');
+            }
+        };
 
         // Switch tabs
         function switchTab(tab) {
@@ -1034,7 +1055,12 @@ ${escapeMarkdown(complaintData.companyCode)}
                 `.trim();
 
                 const encodedMessage = encodeURIComponent(message);
-                const telegramUrl = `https://api.telegram.org/bot1647627417:AAEJ_r5VnmbwSXw2NV6VSqeXt7PAqbBEvec/sendmessage?chat_id=150152224&text=${encodedMessage}&parse_mode=Markdown`;
+                const telegramId = complaintData.agentTelegramId;
+                const telegramUrl = `https://api.telegram.org/bot1647627417:AAEJ_r5VnmbwSXw2NV6VSqeXt7PAqbBEvec/sendmessage?chat_id=${telegramId}&text=${encodedMessage}&parse_mode=Markdown`;
+                
+                // Log Telegram ID and API URL
+                console.log('Sending to Telegram ID:', telegramId);
+                console.log('Telegram API URL:', telegramUrl);
 
                 const response = await fetch(telegramUrl);
                 const result = await response.json();
@@ -1043,7 +1069,7 @@ ${escapeMarkdown(complaintData.companyCode)}
                 
                 if (result.ok) {
                     console.log('Telegram notification sent successfully');
-                    showNotification('Telegram notification sent successfully!');
+                    showNotification(`Telegram notification sent successfully! (ID: ${telegramId})`);
                 } else {
                     console.error('Failed to send Telegram notification with Markdown:', result);
                     
@@ -1104,7 +1130,11 @@ ${complaintData.companyCode || 'N/A'}
                         `.trim();
 
                         const plainEncodedMessage = encodeURIComponent(plainMessage);
-                        const plainTelegramUrl = `https://api.telegram.org/bot1647627417:AAEJ_r5VnmbwSXw2NV6VSqeXt7PAqbBEvec/sendmessage?chat_id=150152224&text=${plainEncodedMessage}`;
+                        const plainTelegramUrl = `https://api.telegram.org/bot1647627417:AAEJ_r5VnmbwSXw2NV6VSqeXt7PAqbBEvec/sendmessage?chat_id=${telegramId}&text=${plainEncodedMessage}`;
+                        
+                        // Log Telegram ID and API URL for plain text
+                        console.log('Sending to Telegram ID (plain):', telegramId);
+                        console.log('Telegram API URL (plain):', plainTelegramUrl);
 
                         const plainResponse = await fetch(plainTelegramUrl);
                         const plainResult = await plainResponse.json();
@@ -1113,7 +1143,7 @@ ${complaintData.companyCode || 'N/A'}
                         
                         if (plainResult.ok) {
                             console.log('Telegram notification sent successfully (plain text)');
-                            showNotification('Telegram notification sent successfully! (plain text)');
+                            showNotification(`Telegram notification sent successfully! (plain text, ID: ${telegramId})`);
                         } else {
                             console.error('Failed to send plain text Telegram notification:', plainResult);
                             showNotification('Telegram notification failed even with plain text. Please check console for details.', 'error');

@@ -1,6 +1,6 @@
 // Version Configuration - Prevent multiple declarations
 if (typeof window.APP_VERSION === 'undefined') {
-    window.APP_VERSION = '1.0.2';
+    window.APP_VERSION = '1.0.4';
     window.VERSION_TIMESTAMP = Date.now();
 }
 
@@ -9,10 +9,11 @@ function getCacheBuster() {
     return `?v=${window.APP_VERSION}&t=${window.VERSION_TIMESTAMP}`;
 }
 
-// Version management
-const VersionManager = {
-    currentVersion: window.APP_VERSION,
-    lastCheckedVersion: localStorage.getItem('lastCheckedVersion') || '1.0.0',
+// Version management - Prevent multiple declarations
+if (typeof window.VersionManager === 'undefined') {
+    window.VersionManager = {
+        currentVersion: window.APP_VERSION,
+        lastCheckedVersion: localStorage.getItem('lastCheckedVersion') || '1.0.0',
     
     // Check for updates
     checkForUpdates: function() {
@@ -177,24 +178,33 @@ const VersionManager = {
     
     // Update app
     updateApp: function() {
+        console.log('Update app called');
+        
+        // Update the last checked version to current version to prevent re-notification
+        localStorage.setItem('lastCheckedVersion', window.APP_VERSION);
+        console.log('Updated lastCheckedVersion to:', window.APP_VERSION);
+        
         // Clear cache and reload
         if ('caches' in window) {
             caches.keys().then(names => {
+                console.log('Clearing caches:', names);
                 names.forEach(name => {
                     caches.delete(name);
                 });
             });
         }
         
-        // Clear localStorage cache
-        const keysToKeep = ['userEmail', 'userId', 'userRights', 'userlevel', 'companyCode'];
+        // Clear localStorage cache (but keep user data and version info)
+        const keysToKeep = ['userEmail', 'userId', 'userRights', 'userlevel', 'companyCode', 'lastCheckedVersion'];
         const allKeys = Object.keys(localStorage);
+        console.log('Clearing localStorage keys:', allKeys.filter(key => !keysToKeep.includes(key)));
         allKeys.forEach(key => {
             if (!keysToKeep.includes(key)) {
                 localStorage.removeItem(key);
             }
         });
         
+        console.log('Reloading page...');
         // Reload the page
         window.location.reload(true);
     },
@@ -207,8 +217,10 @@ const VersionManager = {
             cacheBuster: getCacheBuster()
         };
     }
-};
+    };
+}
 
-// Make VersionManager globally available
-window.VersionManager = VersionManager;
-window.getCacheBuster = getCacheBuster; 
+// Make getCacheBuster globally available (only if not already defined)
+if (typeof window.getCacheBuster === 'undefined') {
+    window.getCacheBuster = getCacheBuster;
+} 
