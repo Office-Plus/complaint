@@ -4,26 +4,13 @@ link.rel = 'stylesheet';
 link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
 document.head.appendChild(link);
 
-// Load version configuration (only if not already loaded)
-if (!window.APP_VERSION) {
-    const versionScript = document.createElement('script');
-    versionScript.src = 'version-config.js?v=1.0.1&t=' + Date.now();
-    document.head.appendChild(versionScript);
-}
-
-// Set user email and version
+// Set user email
 const userEmail = localStorage.getItem('userEmail');
 if (userEmail) {
     const userEmailElement = document.getElementById('userEmail');
     if (userEmailElement) {
         userEmailElement.textContent = userEmail;
     }
-}
-
-// Set app version
-const appVersionElement = document.getElementById('appVersion');
-if (appVersionElement) {
-    appVersionElement.textContent = 'v1.0.1';
 }
 
 // Function to filter menu items based on userRights and userlevel
@@ -85,12 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const menu = document.querySelector('.side-menu');
         if (menu) {
             filterMenuItems();
-            
-            // Check for updates after menu is loaded
-            if (window.VersionManager) {
-                VersionManager.checkForUpdates();
-            }
-            
             clearInterval(checkMenu);
         }
     }, 100);

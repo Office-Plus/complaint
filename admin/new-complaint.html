@@ -535,8 +535,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
-    
-    <!-- Version Management -->
     <script src="menu.js"></script>
     <script>
         // Firebase configuration
@@ -555,8 +553,8 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Load the menu with cache busting
-        fetch('menu.html' + getCacheBuster())
+        // Load the menu
+        fetch('menu.html')
             .then(response => response.text())
             .then(html => {
                 document.getElementById('menuContainer').innerHTML = html;
@@ -603,11 +601,6 @@
 
             // Add search event listeners
             setupSearchListeners();
-            
-            // Check for updates
-            if (window.VersionManager) {
-                VersionManager.checkForUpdates();
-            }
         });
 
         // Switch tabs
