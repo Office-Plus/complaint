@@ -4,10 +4,12 @@ link.rel = 'stylesheet';
 link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
 document.head.appendChild(link);
 
-// Load version configuration
-const versionScript = document.createElement('script');
-versionScript.src = 'version-config.js' + getCacheBuster();
-document.head.appendChild(versionScript);
+// Load version configuration (only if not already loaded)
+if (!window.APP_VERSION) {
+    const versionScript = document.createElement('script');
+    versionScript.src = 'version-config.js?v=1.0.1&t=' + Date.now();
+    document.head.appendChild(versionScript);
+}
 
 // Set user email and version
 const userEmail = localStorage.getItem('userEmail');

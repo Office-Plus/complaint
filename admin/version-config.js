@@ -1,22 +1,24 @@
-// Version Configuration
-const APP_VERSION = '1.0.1';
-const VERSION_TIMESTAMP = Date.now();
+// Version Configuration - Prevent multiple declarations
+if (typeof window.APP_VERSION === 'undefined') {
+    window.APP_VERSION = '1.0.2';
+    window.VERSION_TIMESTAMP = Date.now();
+}
 
 // Cache busting function
 function getCacheBuster() {
-    return `?v=${APP_VERSION}&t=${VERSION_TIMESTAMP}`;
+    return `?v=${window.APP_VERSION}&t=${window.VERSION_TIMESTAMP}`;
 }
 
 // Version management
 const VersionManager = {
-    currentVersion: APP_VERSION,
+    currentVersion: window.APP_VERSION,
     lastCheckedVersion: localStorage.getItem('lastCheckedVersion') || '1.0.0',
     
     // Check for updates
     checkForUpdates: function() {
         // In a real app, you'd check against a server
         // For now, we'll use localStorage to simulate version checking
-        const serverVersion = localStorage.getItem('serverVersion') || APP_VERSION;
+        const serverVersion = localStorage.getItem('serverVersion') || window.APP_VERSION;
         
         if (this.isNewerVersion(serverVersion, this.lastCheckedVersion)) {
             this.showUpdateNotification();
@@ -52,7 +54,7 @@ const VersionManager = {
                     <div class="update-icon">🔄</div>
                     <div class="update-text">
                         <h3>New Version Available!</h3>
-                        <p>A new version (${APP_VERSION}) of the application is available.</p>
+                        <p>A new version (${window.APP_VERSION}) of the application is available.</p>
                     </div>
                     <button class="update-btn" onclick="VersionManager.updateApp()">Update Now</button>
                     <button class="update-close" onclick="VersionManager.closeUpdateNotification()">×</button>
@@ -201,7 +203,7 @@ const VersionManager = {
     getVersionInfo: function() {
         return {
             version: this.currentVersion,
-            timestamp: VERSION_TIMESTAMP,
+            timestamp: window.VERSION_TIMESTAMP,
             cacheBuster: getCacheBuster()
         };
     }
