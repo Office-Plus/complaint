@@ -264,22 +264,37 @@
             color: #f44336;
         }
 
-        /* Search filters */
-        .search-filters {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+                 /* Search filters */
+         .search-filters {
+             display: grid;
+             grid-template-columns: 1fr 1fr 1fr 1fr;
+             gap: 15px;
+             margin-bottom: 20px;
+         }
 
-        .search-filters input,
-        .search-filters select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+         .search-filters input,
+         .search-filters select {
+             width: 100%;
+             padding: 8px;
+             border: 1px solid #ddd;
+             border-radius: 4px;
+             box-sizing: border-box;
+         }
+
+         /* Mobile responsive for search filters */
+         @media (max-width: 768px) {
+             .search-filters {
+                 grid-template-columns: 1fr;
+                 gap: 10px;
+             }
+         }
+
+         @media (min-width: 769px) and (max-width: 1024px) {
+             .search-filters {
+                 grid-template-columns: 1fr 1fr;
+                 gap: 12px;
+             }
+         }
 
         .loading {
             text-align: center;
@@ -326,10 +341,47 @@
             color: #d32f2f;
         }
 
-        .priority-low {
-            background-color: #f3e5f5;
-            color: #7b1fa2;
-        }
+                 .priority-low {
+             background-color: #f3e5f5;
+             color: #7b1fa2;
+         }
+
+         /* Search job number container and button */
+         .search-job-number-container {
+             position: relative;
+         }
+
+         .search-job-btn {
+             position: absolute;
+             right: 8px;
+             top: 50%;
+             transform: translateY(-50%);
+             background: #2196F3;
+             color: white;
+             border: none;
+             border-radius: 4px;
+             width: 32px;
+             height: 32px;
+             cursor: pointer;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             font-size: 16px;
+             transition: background-color 0.3s;
+         }
+
+         .search-job-btn:hover {
+             background: #1976D2;
+         }
+
+         .search-job-btn:active {
+             background: #0D47A1;
+         }
+
+         /* Adjust input padding to make room for button */
+         .search-job-number-container input {
+             padding-right: 48px;
+         }
     </style>
 </head>
 <body>
@@ -486,24 +538,22 @@
             </div>
         </div>
 
-        <div id="listTab" class="tab-content">
-            <div class="search-filters">
-                <input type="text" id="searchCustomerName" placeholder="Search by customer name...">
-                <input type="text" id="searchPhoneNumber" placeholder="Search by phone number...">
-                <input type="text" id="searchDealer" placeholder="Search by dealer...">
-                <input type="text" id="searchBrand" placeholder="Search by brand...">
-                <input type="text" id="searchCategory" placeholder="Search by category...">
-                <select id="searchPriority">
-                    <option value="">All Priorities</option>
-                    <option value="High">High</option>
-                    <option value="Low">Low</option>
-                </select>
-                <select id="searchStatus">
-                    <option value="">All Status</option>
-                    <option value="Open">Open</option>
-                    <option value="Closed">Closed</option>
-                </select>
-            </div>
+                 <div id="listTab" class="tab-content">
+             <div class="search-filters">
+                 <div class="search-job-number-container">
+                     <input type="text" id="searchComplaintNo" placeholder="Enter complaint number and press Enter...">
+                     <button type="button" id="searchJobBtn" class="search-job-btn" title="Search">
+                         <span>→</span>
+                     </button>
+                 </div>
+                 <input type="text" id="searchPhoneNumber" placeholder="Search by phone number...">
+                 <input type="text" id="searchBrand" placeholder="Search by brand...">
+                 <select id="searchStatus">
+                     <option value="Open" selected>Open</option>
+                     <option value="Closed">Closed</option>
+                     <option value="">All Status</option>
+                 </select>
+             </div>
 
             <table>
                 <thead>
@@ -571,13 +621,9 @@
         let hasMore = true;
         const pageSize = 50;
         let currentFilters = {
-            customerName: '',
             phoneNumber: '',
-            dealer: '',
             brand: '',
-            category: '',
-            priority: '',
-            status: ''
+            status: 'Open'
         };
 
         // Load data when the page loads
@@ -641,22 +687,105 @@
             }
         }
 
-        // Setup search listeners
-        function setupSearchListeners() {
-            const searchFields = [
-                'searchCustomerName', 'searchPhoneNumber', 'searchDealer', 
-                'searchBrand', 'searchCategory', 'searchPriority', 'searchStatus'
-            ];
+                 // Setup search listeners
+         function setupSearchListeners() {
+             // Complaint number search (Enter key)
+             document.getElementById('searchComplaintNo').addEventListener('keypress', function(e) {
+                 if (e.key === 'Enter') {
+                     e.preventDefault();
+                     const complaintNo = this.value.trim();
+                     if (complaintNo) {
+                         searchByComplaintNo(complaintNo);
+                     }
+                 }
+             });
 
-            searchFields.forEach(fieldId => {
-                document.getElementById(fieldId).addEventListener('input', debounce(function() {
-                    const fieldName = fieldId.replace('search', '').toLowerCase();
-                    currentFilters[fieldName] = this.value.toLowerCase();
-                    hasMore = true;
-                    lastVisible = null;
-                    loadComplaints(true);
-                }, 500));
-            });
+             // Search button click
+             document.getElementById('searchJobBtn').addEventListener('click', function() {
+                 const complaintNo = document.getElementById('searchComplaintNo').value.trim();
+                 if (complaintNo) {
+                     searchByComplaintNo(complaintNo);
+                 }
+             });
+
+             // Phone number search
+             document.getElementById('searchPhoneNumber').addEventListener('input', debounce(function() {
+                 currentFilters.phoneNumber = this.value.toLowerCase();
+                 hasMore = true;
+                 lastVisible = null;
+                 loadComplaints(true);
+             }, 500));
+
+             // Brand search
+             document.getElementById('searchBrand').addEventListener('input', debounce(function() {
+                 currentFilters.brand = this.value.toLowerCase();
+                 hasMore = true;
+                 lastVisible = null;
+                 loadComplaints(true);
+             }, 500));
+
+             // Status filter
+             document.getElementById('searchStatus').addEventListener('change', function() {
+                 currentFilters.status = this.value;
+                 hasMore = true;
+                 lastVisible = null;
+                 loadComplaints(true);
+             });
+         }
+
+        // Search by complaint job number
+        async function searchByComplaintNo(jobNumber) {
+            try {
+                const companyCode = localStorage.getItem('companyCode');
+                
+                // Clear the table first
+                const tbody = document.getElementById('complaintTable');
+                tbody.innerHTML = '';
+                
+                // Show loading
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('noMore').style.display = 'none';
+
+                // Search for the specific complaint by jobNumber field
+                const snapshot = await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
+                    .where('companyCode', '==', companyCode)
+                    .where('jobNumber', '==', jobNumber)
+                    .get();
+
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    const complaint = doc.data();
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${complaint.customerName || ''}</td>
+                        <td>${complaint.phoneNumber || ''}</td>
+                        <td>${complaint.dealer || ''}</td>
+                        <td>${complaint.brand || ''}</td>
+                        <td>${complaint.category || ''}</td>
+                        <td><span class="priority-badge priority-${complaint.priority?.toLowerCase() || 'low'}">${complaint.priority || 'Low'}</span></td>
+                        <td><span class="status-badge status-${complaint.status?.toLowerCase() || 'open'}">${complaint.status || 'Open'}</span></td>
+                        <td>${complaint.complaintDate || ''}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
+                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    showNotification(`Found complaint with Job Number: ${jobNumber}`);
+                } else {
+                    showNotification('Complaint with this Job Number not found.', 'error');
+                }
+            } catch (error) {
+                console.error('Error searching by job number:', error);
+                showNotification('Error searching for complaint. Please try again.', 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
         }
 
         // Debounce function
@@ -687,34 +816,23 @@
                     .collection(companyCode)
                     .doc('complaints')
                     .collection('complaints-coll')
-                    .where('status', '==', 'Open');
+                    .where('companyCode', '==', companyCode);
 
-                // Apply filters
-                if (currentFilters.customerName) {
-                    query = query.where('customerName', '>=', currentFilters.customerName)
-                               .where('customerName', '<=', currentFilters.customerName + '\uf8ff');
+                // Apply status filter first (required for Firestore)
+                if (currentFilters.status) {
+                    query = query.where('status', '==', currentFilters.status);
                 }
+
+                // Apply phone number filter if provided
                 if (currentFilters.phoneNumber) {
                     query = query.where('phoneNumber', '>=', currentFilters.phoneNumber)
                                .where('phoneNumber', '<=', currentFilters.phoneNumber + '\uf8ff');
                 }
-                if (currentFilters.dealer) {
-                    query = query.where('dealer', '>=', currentFilters.dealer)
-                               .where('dealer', '<=', currentFilters.dealer + '\uf8ff');
-                }
+
+                // Apply brand filter if provided
                 if (currentFilters.brand) {
                     query = query.where('brand', '>=', currentFilters.brand)
                                .where('brand', '<=', currentFilters.brand + '\uf8ff');
-                }
-                if (currentFilters.category) {
-                    query = query.where('category', '>=', currentFilters.category)
-                               .where('category', '<=', currentFilters.category + '\uf8ff');
-                }
-                if (currentFilters.priority) {
-                    query = query.where('priority', '==', currentFilters.priority);
-                }
-                if (currentFilters.status) {
-                    query = query.where('status', '==', currentFilters.status);
                 }
 
                 // Add ordering and pagination
