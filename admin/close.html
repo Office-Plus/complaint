@@ -195,6 +195,17 @@
             border-color: #4caf50 !important;
         }
 
+        .company-code-field {
+            background-color: #fff3cd !important;
+            border-color: #ffeaa7 !important;
+        }
+
+        .company-code-field:focus {
+            background-color: #fff3cd !important;
+            border-color: #2196F3 !important;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+        }
+
         /* Mobile responsive adjustments */
         @media (max-width: 768px) {
             .container {
@@ -253,6 +264,15 @@
         .success-animation {
             animation: successPulse 0.3s ease-in-out;
         }
+
+        .version-info {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -266,6 +286,11 @@
             <div class="section-title">Close Complaint</div>
             
             <form id="closeForm">
+                <div class="form-group">
+                    <label for="companyCode">Company Code <span class="required">*</span></label>
+                    <input type="text" id="companyCode" required placeholder="Enter company code">
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="itemSerialNumber">Item Serial Number <span class="required">*</span></label>
@@ -291,6 +316,10 @@
                     <button type="submit" class="btn btn-primary" id="updateBtn">Update</button>
                     <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
                 </div>
+                
+                <div class="version-info">
+                    <span>Version: <span id="appVersion">Loading...</span></span>
+                </div>
             </form>
         </div>
     </div>
@@ -304,6 +333,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    
+    <!-- Version Configuration -->
+    <script src="version-config.js"></script>
     
     <script>
         // Firebase configuration
@@ -347,13 +379,46 @@
         function resetForm() {
             document.getElementById('closeForm').reset();
             document.getElementById('status').value = 'Closed';
+            loadCompanyCode(); // Reload company code from localStorage
         }
 
-        // Find complaint by serial number and job number
-        async function findComplaint(serialNumber, jobNumber) {
+        // Load company code from localStorage
+        function loadCompanyCode() {
+            const companyCodeField = document.getElementById('companyCode');
+            const storedCompanyCode = localStorage.getItem('companyCode');
+            
+            if (storedCompanyCode && storedCompanyCode.trim() !== '') {
+                companyCodeField.value = storedCompanyCode;
+                companyCodeField.classList.remove('company-code-field');
+            } else {
+                companyCodeField.value = '';
+                companyCodeField.classList.add('company-code-field');
+                companyCodeField.focus(); // Set cursor to this field
+            }
+        }
+
+        // Save company code to localStorage when user leaves the field
+        function saveCompanyCode() {
+            const companyCodeField = document.getElementById('companyCode');
+            let companyCode = companyCodeField.value.trim();
+            
+            if (companyCode) {
+                // Convert to uppercase and remove spaces as in settings
+                companyCode = companyCode.toUpperCase().replace(/\s+/g, '');
+                companyCodeField.value = companyCode;
+                localStorage.setItem('companyCode', companyCode);
+                companyCodeField.classList.remove('company-code-field');
+            } else {
+                localStorage.removeItem('companyCode');
+                companyCodeField.classList.add('company-code-field');
+            }
+        }
+
+        // Find complaint by job number only
+        async function findComplaint(jobNumber) {
             try {
-                // Get all company codes from localStorage or use a default
-                const companyCode = localStorage.getItem('companyCode') || 'default';
+                // Get company code from form field
+                const companyCode = document.getElementById('companyCode').value.trim() || 'default';
                 
                 const complaintsRef = db.collection('complaints')
                     .doc('cmplts')
@@ -361,9 +426,8 @@
                     .doc('complaints')
                     .collection('complaints-coll');
                 
-                // Query by itemSerialNumber and jobNumber
+                // Query by jobNumber only
                 const querySnapshot = await complaintsRef
-                    .where('itemSerialNumber', '==', serialNumber)
                     .where('jobNumber', '==', jobNumber)
                     .where('status', '==', 'Open')
                     .get();
@@ -393,25 +457,25 @@
             updateBtn.textContent = 'Updating...';
             
             try {
-                const serialNumber = document.getElementById('itemSerialNumber').value.trim();
+                const companyCode = document.getElementById('companyCode').value.trim();
+                const itemSerialNumber = document.getElementById('itemSerialNumber').value.trim();
                 const jobNumber = document.getElementById('jobNumber').value.trim();
                 const reason = document.getElementById('reason').value.trim();
 
-                if (!serialNumber || !jobNumber || !reason) {
+                if (!companyCode || !itemSerialNumber || !jobNumber || !reason) {
                     showNotification('Please fill in all required fields.', 'error');
                     return;
                 }
 
                 // Find the complaint
-                const complaint = await findComplaint(serialNumber, jobNumber);
+                const complaint = await findComplaint(jobNumber);
                 
                 if (!complaint) {
-                    showNotification('No open complaint found with the provided serial number and job number.', 'error');
+                    showNotification('No open complaint found with the provided job number.', 'error');
                     return;
                 }
 
-                // Update the complaint
-                const companyCode = localStorage.getItem('companyCode') || 'default';
+                // Update the complaint using the found complaint ID
                 await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
@@ -419,6 +483,7 @@
                     .collection('complaints-coll')
                     .doc(complaint.id)
                     .update({
+                        itemSerialNumber: itemSerialNumber,
                         status: 'Closed',
                         reason: reason,
                         closedAt: new Date(),
@@ -451,6 +516,19 @@
 
         // Add some visual feedback for form interactions
         document.addEventListener('DOMContentLoaded', function() {
+            // Load company code on page load
+            loadCompanyCode();
+            
+            // Add event listener for company code field
+            const companyCodeField = document.getElementById('companyCode');
+            companyCodeField.addEventListener('blur', saveCompanyCode);
+            
+            // Display version number
+            const appVersionElement = document.getElementById('appVersion');
+            if (appVersionElement && window.APP_VERSION) {
+                appVersionElement.textContent = window.APP_VERSION;
+            }
+            
             // Add focus effects
             const inputs = document.querySelectorAll('input, textarea');
             inputs.forEach(input => {
