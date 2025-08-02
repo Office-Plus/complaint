@@ -8,10 +8,17 @@ document.head.appendChild(link);
 if (!window.APP_VERSION) {
     const versionScript = document.createElement('script');
     versionScript.src = 'version-config.js?v=1.0.3&t=' + Date.now();
+    versionScript.onload = function() {
+        // Set app version after version config is loaded
+        setAppVersion();
+    };
     document.head.appendChild(versionScript);
+} else {
+    // Version already loaded, set it immediately
+    setAppVersion();
 }
 
-// Set user email and version
+// Set user email
 const userEmail = localStorage.getItem('userEmail');
 if (userEmail) {
     const userEmailElement = document.getElementById('userEmail');
@@ -20,12 +27,17 @@ if (userEmail) {
     }
 }
 
-// Set app version
-const appVersionElement = document.getElementById('appVersion');
-if (appVersionElement) {
-    // Use dynamic version from VersionManager if available, otherwise fallback
-    const version = window.APP_VERSION || '1.0.3';
-    appVersionElement.textContent = 'v' + version;
+// Function to set app version
+function setAppVersion() {
+    const appVersionElement = document.getElementById('appVersion');
+    if (appVersionElement) {
+        if (window.APP_VERSION) {
+            appVersionElement.textContent = 'v' + window.APP_VERSION;
+        } else {
+            // Fallback if version is not available
+            appVersionElement.textContent = 'v1.0.3';
+        }
+    }
 }
 
 // Function to filter menu items based on userRights and userlevel
@@ -88,6 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menu) {
             filterMenuItems();
             
+            // Ensure app version is set
+            setAppVersion();
+            
             // Check for updates after menu is loaded
             if (window.VersionManager) {
                 VersionManager.checkForUpdates();
@@ -96,6 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(checkMenu);
         }
     }, 100);
+    
+    // Also try to set version after a short delay to ensure version-config.js is loaded
+    setTimeout(() => {
+        setAppVersion();
+    }, 500);
 });
 
 // Toggle menu function
