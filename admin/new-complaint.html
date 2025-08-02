@@ -685,6 +685,8 @@
                 let query = db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
                     .where('status', '==', 'Open');
 
                 // Apply filters
@@ -779,6 +781,8 @@
                 const doc = await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
                     .doc(docId)
                     .get();
 
@@ -832,6 +836,8 @@
                 await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
                     .doc(docId)
                     .delete();
 
@@ -1242,6 +1248,8 @@ ${complaintData.companyCode || 'N/A'}
                     await db.collection('complaints')
                         .doc('cmplts')
                         .collection(companyCode)
+                        .doc('complaints')
+                        .collection('complaints-coll')
                         .doc(editId)
                         .update(complaintData);
                     showNotification('Complaint updated successfully!');
@@ -1256,6 +1264,8 @@ ${complaintData.companyCode || 'N/A'}
                     await db.collection('complaints')
                         .doc('cmplts')
                         .collection(companyCode)
+                        .doc('complaints')
+                        .collection('complaints-coll')
                         .add(complaintData);
                     showNotification('Complaint submitted successfully!');
                     

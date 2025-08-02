@@ -357,7 +357,9 @@
                 
                 const complaintsRef = db.collection('complaints')
                     .doc('cmplts')
-                    .collection(companyCode);
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll');
                 
                 // Query by itemSerialNumber and jobNumber
                 const querySnapshot = await complaintsRef
@@ -413,6 +415,8 @@
                 await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
                     .doc(complaint.id)
                     .update({
                         status: 'Closed',
