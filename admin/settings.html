@@ -319,15 +319,17 @@
 
         // Helper function to get normalized company code
         async function getNormalizedCompanyCode(companyCode) {
-            const normalizedCompanyCode = companyCode.toLowerCase().trim();
+            // Remove all spaces and convert to lowercase
+            const normalizedCompanyCode = companyCode.toLowerCase().replace(/\s+/g, '');
             
-            // Check if a company collection already exists (case-insensitive)
+            // Check if a company collection already exists (case-insensitive and space-insensitive)
             const companiesRef = db.collection('complaints').doc('cmplts');
             const companiesSnapshot = await companiesRef.listCollections();
             
             let existingCompanyCode = null;
             for (const collection of companiesSnapshot) {
-                if (collection.id.toLowerCase() === normalizedCompanyCode) {
+                // Compare normalized versions (lowercase and no spaces)
+                if (collection.id.toLowerCase().replace(/\s+/g, '') === normalizedCompanyCode) {
                     existingCompanyCode = collection.id;
                     break;
                 }
@@ -367,7 +369,7 @@
             try {
                 // Get normalized company code
                 const finalCompanyCode = await getNormalizedCompanyCode(companyCode);
-                const normalizedCompanyCode = finalCompanyCode.toLowerCase().trim();
+                const normalizedCompanyCode = finalCompanyCode.toLowerCase().replace(/\s+/g, '');
                 
                 // Save to the correct Firestore path using the final company code
                 await db.collection('complaints')
