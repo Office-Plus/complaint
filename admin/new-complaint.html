@@ -267,9 +267,10 @@
                  /* Search filters */
          .search-filters {
              display: grid;
-             grid-template-columns: 1fr 1fr 1fr 1fr;
+             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
              gap: 15px;
              margin-bottom: 20px;
+             align-items: end;
          }
 
          .search-filters input,
@@ -279,6 +280,26 @@
              border: 1px solid #ddd;
              border-radius: 4px;
              box-sizing: border-box;
+         }
+
+         .download-excel-btn {
+             background: #28a745;
+             color: white;
+             border: none;
+             padding: 8px 16px;
+             border-radius: 4px;
+             cursor: pointer;
+             font-size: 14px;
+             transition: background-color 0.3s;
+         }
+
+         .download-excel-btn:hover {
+             background: #218838;
+         }
+
+         .download-excel-btn:disabled {
+             background: #6c757d;
+             cursor: not-allowed;
          }
 
          /* Mobile responsive for search filters */
@@ -292,6 +313,13 @@
          @media (min-width: 769px) and (max-width: 1024px) {
              .search-filters {
                  grid-template-columns: 1fr 1fr;
+                 gap: 12px;
+             }
+         }
+
+         @media (min-width: 1025px) and (max-width: 1400px) {
+             .search-filters {
+                 grid-template-columns: 1fr 1fr 1fr 1fr;
                  gap: 12px;
              }
          }
@@ -553,6 +581,30 @@
                      <option value="Closed">Closed</option>
                      <option value="">All Status</option>
                  </select>
+                 <select id="searchCategory">
+                     <option value="">All Categories</option>
+                 </select>
+                 <select id="searchAgent">
+                     <option value="">All Agents</option>
+                 </select>
+                 <select id="searchMonth">
+                     <option value="">All Months</option>
+                     <option value="01">January</option>
+                     <option value="02">February</option>
+                     <option value="03">March</option>
+                     <option value="04">April</option>
+                     <option value="05">May</option>
+                     <option value="06">June</option>
+                     <option value="07">July</option>
+                     <option value="08">August</option>
+                     <option value="09">September</option>
+                     <option value="10">October</option>
+                     <option value="11">November</option>
+                     <option value="12">December</option>
+                 </select>
+                 <button type="button" id="downloadExcelBtn" class="download-excel-btn" title="Download Excel">
+                     📊 Download Excel
+                 </button>
              </div>
 
             <table>
@@ -585,6 +637,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    
+    <!-- Add XLSX library for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <!-- Version Management -->
     <script src="menu.js"></script>
@@ -623,11 +678,14 @@
         let currentFilters = {
             phoneNumber: '',
             brand: '',
-            status: 'Open'
+            status: 'Open',
+            category: '',
+            agent: '',
+            month: ''
         };
 
         // Load data when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Check if user is logged in
             const userEmail = localStorage.getItem('userEmail');
             const userId = localStorage.getItem('userId');
@@ -649,9 +707,11 @@
             document.getElementById('jobDate').value = today;
             
             // Load dropdown data
-            loadCategories();
-            loadBrands();
-            loadAgents();
+            await Promise.all([
+                loadCategories(),
+                loadBrands(),
+                loadAgents()
+            ]);
 
             // Add search event listeners
             setupSearchListeners();
@@ -730,6 +790,35 @@
                  hasMore = true;
                  lastVisible = null;
                  loadComplaints(true);
+             });
+
+             // Category filter
+             document.getElementById('searchCategory').addEventListener('change', function() {
+                 currentFilters.category = this.value;
+                 hasMore = true;
+                 lastVisible = null;
+                 loadComplaints(true);
+             });
+
+             // Agent filter
+             document.getElementById('searchAgent').addEventListener('change', function() {
+                 currentFilters.agent = this.value;
+                 hasMore = true;
+                 lastVisible = null;
+                 loadComplaints(true);
+             });
+
+             // Month filter
+             document.getElementById('searchMonth').addEventListener('change', function() {
+                 currentFilters.month = this.value;
+                 hasMore = true;
+                 lastVisible = null;
+                 loadComplaints(true);
+             });
+
+             // Download Excel button
+             document.getElementById('downloadExcelBtn').addEventListener('click', function() {
+                 downloadExcelData();
              });
          }
 
@@ -833,6 +922,25 @@
                 if (currentFilters.brand) {
                     query = query.where('brand', '>=', currentFilters.brand)
                                .where('brand', '<=', currentFilters.brand + '\uf8ff');
+                }
+
+                // Apply category filter if provided
+                if (currentFilters.category) {
+                    query = query.where('category', '==', currentFilters.category);
+                }
+
+                // Apply agent filter if provided
+                if (currentFilters.agent) {
+                    query = query.where('agentId', '==', currentFilters.agent);
+                }
+
+                // Apply month filter if provided
+                if (currentFilters.month) {
+                    const currentYear = new Date().getFullYear();
+                    const startDate = `${currentYear}-${currentFilters.month}-01`;
+                    const endDate = `${currentYear}-${currentFilters.month}-31`;
+                    query = query.where('complaintDate', '>=', startDate)
+                               .where('complaintDate', '<=', endDate);
                 }
 
                 // Add ordering and pagination
@@ -980,7 +1088,10 @@
                     .get();
 
                 const categorySelect = document.getElementById('category');
+                const searchCategorySelect = document.getElementById('searchCategory');
+                
                 categorySelect.innerHTML = '<option value="">Select Category</option>';
+                searchCategorySelect.innerHTML = '<option value="">All Categories</option>';
 
                 categoriesSnapshot.forEach(doc => {
                     const category = doc.data();
@@ -988,6 +1099,11 @@
                     option.value = category.categoryName;
                     option.textContent = category.categoryName;
                     categorySelect.appendChild(option);
+                    
+                    const searchOption = document.createElement('option');
+                    searchOption.value = category.categoryName;
+                    searchOption.textContent = category.categoryName;
+                    searchCategorySelect.appendChild(searchOption);
                 });
             } catch (error) {
                 console.error('Error loading categories:', error);
@@ -1034,7 +1150,10 @@
                     .get();
 
                 const agentSelect = document.getElementById('agent');
+                const searchAgentSelect = document.getElementById('searchAgent');
+                
                 agentSelect.innerHTML = '<option value="">Select Agent</option>';
+                searchAgentSelect.innerHTML = '<option value="">All Agents</option>';
 
                 agentsSnapshot.forEach(doc => {
                     const agent = doc.data();
@@ -1043,6 +1162,11 @@
                     option.textContent = agent.agentName;
                     option.dataset.telegramId = agent.agentTelegramId;
                     agentSelect.appendChild(option);
+                    
+                    const searchOption = document.createElement('option');
+                    searchOption.value = doc.id;
+                    searchOption.textContent = agent.agentName;
+                    searchAgentSelect.appendChild(searchOption);
                 });
             } catch (error) {
                 console.error('Error loading agents:', error);
@@ -1325,6 +1449,168 @@ ${complaintData.companyCode || 'N/A'}
             // Reset button text and remove edit ID
             document.getElementById('submitBtn').textContent = 'Submit Complaint';
             delete document.getElementById('complaintForm').dataset.editId;
+        }
+
+        // Download Excel data function
+        async function downloadExcelData() {
+            // Check if XLSX library is loaded
+            if (typeof XLSX === 'undefined') {
+                showNotification('Excel library not loaded. Please refresh the page and try again.', 'error');
+                return;
+            }
+
+            const downloadBtn = document.getElementById('downloadExcelBtn');
+            const originalText = downloadBtn.textContent;
+            
+            try {
+                // Show loading state
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = '⏳ Loading...';
+                
+                const companyCode = localStorage.getItem('companyCode');
+                
+                // Build query based on current filters
+                let query = db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
+                    .where('companyCode', '==', companyCode);
+
+                // Apply status filter first (required for Firestore)
+                if (currentFilters.status) {
+                    query = query.where('status', '==', currentFilters.status);
+                }
+
+                // Apply phone number filter if provided
+                if (currentFilters.phoneNumber) {
+                    query = query.where('phoneNumber', '>=', currentFilters.phoneNumber)
+                               .where('phoneNumber', '<=', currentFilters.phoneNumber + '\uf8ff');
+                }
+
+                // Apply brand filter if provided
+                if (currentFilters.brand) {
+                    query = query.where('brand', '>=', currentFilters.brand)
+                               .where('brand', '<=', currentFilters.brand + '\uf8ff');
+                }
+
+                // Apply category filter if provided
+                if (currentFilters.category) {
+                    query = query.where('category', '==', currentFilters.category);
+                }
+
+                // Apply agent filter if provided
+                if (currentFilters.agent) {
+                    query = query.where('agentId', '==', currentFilters.agent);
+                }
+
+                // Apply month filter if provided
+                if (currentFilters.month) {
+                    const currentYear = new Date().getFullYear();
+                    const startDate = `${currentYear}-${currentFilters.month}-01`;
+                    const endDate = `${currentYear}-${currentFilters.month}-31`;
+                    query = query.where('complaintDate', '>=', startDate)
+                               .where('complaintDate', '<=', endDate);
+                }
+
+                // Get all data (no pagination for Excel download)
+                const snapshot = await query.orderBy('createdAt', 'desc').get();
+                
+                if (snapshot.empty) {
+                    showNotification('No data found for the selected filters.', 'error');
+                    return;
+                }
+
+                console.log(`Found ${snapshot.size} records for Excel download`);
+
+                // Prepare data for Excel
+                const excelData = [];
+                const headers = [
+                    'Customer Name', 'Phone Number', 'Alternate Number', 'Email', 'Address', 'Pin Code',
+                    'Dealer', 'Complaint Date', 'Description', 'Category', 'Purchase Date', 'Under Warranty',
+                    'Brand', 'Item Serial Number', 'Priority', 'Agent', 'Job Date', 'Job Number', 'Reason', 'Status'
+                ];
+                excelData.push(headers);
+
+                // Get agent names mapping
+                const agentNames = {};
+                const agentsSnapshot = await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('serviceagents')
+                    .where('status', '==', 'A')
+                    .get();
+                
+                agentsSnapshot.forEach(doc => {
+                    agentNames[doc.id] = doc.data().agentName;
+                });
+
+                snapshot.forEach(doc => {
+                    const complaint = doc.data();
+                    const row = [
+                        complaint.customerName || '',
+                        complaint.phoneNumber || '',
+                        complaint.alternateNumber || '',
+                        complaint.email || '',
+                        complaint.address || '',
+                        complaint.pinCode || '',
+                        complaint.dealer || '',
+                        complaint.complaintDate || '',
+                        complaint.description || '',
+                        complaint.category || '',
+                        complaint.purchaseDate || '',
+                        complaint.underWarranty || '',
+                        complaint.brand || '',
+                        complaint.itemSerialNumber || '',
+                        complaint.priority || 'Low',
+                        agentNames[complaint.agentId] || '',
+                        complaint.jobDate || '',
+                        complaint.jobNumber || '',
+                        complaint.reason || '',
+                        complaint.status || 'Open'
+                    ];
+                    excelData.push(row);
+                });
+
+                // Generate Excel file
+                const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Complaints');
+
+                // Auto-size columns
+                const columnWidths = headers.map(header => ({ wch: Math.max(header.length, 15) }));
+                worksheet['!cols'] = columnWidths;
+
+                // Generate filename based on filters
+                let filename = 'complaints';
+                const activeFilters = [];
+                if (currentFilters.category) activeFilters.push(currentFilters.category);
+                if (currentFilters.agent) activeFilters.push(agentNames[currentFilters.agent] || currentFilters.agent);
+                if (currentFilters.month) {
+                    const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                                      'July', 'August', 'September', 'October', 'November', 'December'];
+                    activeFilters.push(monthNames[parseInt(currentFilters.month)]);
+                }
+                if (currentFilters.status && currentFilters.status !== 'Open') activeFilters.push(currentFilters.status);
+                
+                if (activeFilters.length > 0) {
+                    filename += `_${activeFilters.join('_')}`;
+                }
+                filename += `_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+                // Download the file
+                XLSX.writeFile(workbook, filename);
+                showNotification(`Excel file downloaded successfully! (${snapshot.size} records)`);
+
+            } catch (error) {
+                console.error('Error downloading Excel:', error);
+                showNotification('Error downloading Excel file. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = originalText;
+            }
         }
 
         // Form submission
