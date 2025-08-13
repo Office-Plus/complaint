@@ -267,7 +267,7 @@
                  /* Search filters */
          .search-filters {
              display: grid;
-             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
              gap: 15px;
              margin-bottom: 20px;
              align-items: end;
@@ -280,6 +280,54 @@
              border: 1px solid #ddd;
              border-radius: 4px;
              box-sizing: border-box;
+         }
+
+         .search-btn {
+             background: #2196F3;
+             color: white;
+             border: none;
+             padding: 8px 16px;
+             border-radius: 4px;
+             cursor: pointer;
+             font-size: 14px;
+             transition: background-color 0.3s;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             gap: 5px;
+         }
+
+         .search-btn:hover {
+             background: #1976D2;
+         }
+
+         .search-btn:disabled {
+             background: #6c757d;
+             cursor: not-allowed;
+         }
+
+         .refresh-btn {
+             background: #ff9800;
+             color: white;
+             border: none;
+             padding: 8px 16px;
+             border-radius: 4px;
+             cursor: pointer;
+             font-size: 14px;
+             transition: background-color 0.3s;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             gap: 5px;
+         }
+
+         .refresh-btn:hover {
+             background: #f57c00;
+         }
+
+         .refresh-btn:disabled {
+             background: #6c757d;
+             cursor: not-allowed;
          }
 
          .download-excel-btn {
@@ -321,6 +369,13 @@
              .search-filters {
                  grid-template-columns: 1fr 1fr 1fr 1fr;
                  gap: 12px;
+             }
+         }
+
+         @media (min-width: 1401px) {
+             .search-filters {
+                 grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+                 gap: 15px;
              }
          }
 
@@ -518,6 +573,10 @@
                             <input type="text" id="itemSerialNumber">
                         </div>
                         <div class="form-group">
+                            <label for="numberOfProducts">No. of Products</label>
+                            <input type="number" id="numberOfProducts" min="1" value="1">
+                        </div>
+                        <div class="form-group">
                             <label for="priority">Priority</label>
                             <select id="priority">
                                 <option value="Low" selected>Low</option>
@@ -567,7 +626,7 @@
         </div>
 
                  <div id="listTab" class="tab-content">
-             <div class="search-filters">
+                              <div class="search-filters">
                  <div class="search-job-number-container">
                      <input type="text" id="searchComplaintNo" placeholder="Enter complaint number and press Enter...">
                      <button type="button" id="searchJobBtn" class="search-job-btn" title="Search">
@@ -575,7 +634,9 @@
                      </button>
                  </div>
                  <input type="text" id="searchPhoneNumber" placeholder="Search by phone number...">
-                 <input type="text" id="searchBrand" placeholder="Search by brand...">
+                 <select id="searchBrand">
+                     <option value="">All Brands</option>
+                 </select>
                  <select id="searchStatus">
                      <option value="Open" selected>Open</option>
                      <option value="Closed">Closed</option>
@@ -602,6 +663,12 @@
                      <option value="11">November</option>
                      <option value="12">December</option>
                  </select>
+                 <button type="button" id="searchBtn" class="search-btn" title="Search">
+                     🔍 Search
+                 </button>
+                 <button type="button" id="refreshBtn" class="refresh-btn" title="Refresh">
+                     🔄 Refresh
+                 </button>
                  <button type="button" id="downloadExcelBtn" class="download-excel-btn" title="Download Excel">
                      📊 Download Excel
                  </button>
@@ -760,7 +827,7 @@
                  }
              });
 
-             // Search button click
+             // Search button click for complaint number
              document.getElementById('searchJobBtn').addEventListener('click', function() {
                  const complaintNo = document.getElementById('searchComplaintNo').value.trim();
                  if (complaintNo) {
@@ -768,58 +835,55 @@
                  }
              });
 
-             // Phone number search
-             document.getElementById('searchPhoneNumber').addEventListener('input', debounce(function() {
-                 currentFilters.phoneNumber = this.value.toLowerCase();
-                 hasMore = true;
-                 lastVisible = null;
-                 loadComplaints(true);
-             }, 500));
+                           // Main search button click
+              document.getElementById('searchBtn').addEventListener('click', function() {
+                  // Update current filters from form values
+                  currentFilters.phoneNumber = document.getElementById('searchPhoneNumber').value.toLowerCase();
+                  currentFilters.brand = document.getElementById('searchBrand').value;
+                  currentFilters.status = document.getElementById('searchStatus').value;
+                  currentFilters.category = document.getElementById('searchCategory').value;
+                  currentFilters.agent = document.getElementById('searchAgent').value;
+                  currentFilters.month = document.getElementById('searchMonth').value;
+                  
+                  // Reset pagination and load complaints
+                  hasMore = true;
+                  lastVisible = null;
+                  loadComplaints(true);
+              });
 
-             // Brand search
-             document.getElementById('searchBrand').addEventListener('input', debounce(function() {
-                 currentFilters.brand = this.value.toLowerCase();
-                 hasMore = true;
-                 lastVisible = null;
-                 loadComplaints(true);
-             }, 500));
+              // Refresh button click
+              document.getElementById('refreshBtn').addEventListener('click', function() {
+                  // Reset all filters to default values
+                  currentFilters = {
+                      phoneNumber: '',
+                      brand: '',
+                      status: 'Open',
+                      category: '',
+                      agent: '',
+                      month: ''
+                  };
+                  
+                  // Reset form values
+                  document.getElementById('searchComplaintNo').value = '';
+                  document.getElementById('searchPhoneNumber').value = '';
+                  document.getElementById('searchBrand').value = '';
+                  document.getElementById('searchStatus').value = 'Open';
+                  document.getElementById('searchCategory').value = '';
+                  document.getElementById('searchAgent').value = '';
+                  document.getElementById('searchMonth').value = '';
+                  
+                  // Reset pagination and load complaints
+                  hasMore = true;
+                  lastVisible = null;
+                  loadComplaints(true);
+                  
+                  showNotification('Filters reset and data refreshed!');
+              });
 
-             // Status filter
-             document.getElementById('searchStatus').addEventListener('change', function() {
-                 currentFilters.status = this.value;
-                 hasMore = true;
-                 lastVisible = null;
-                 loadComplaints(true);
-             });
-
-             // Category filter
-             document.getElementById('searchCategory').addEventListener('change', function() {
-                 currentFilters.category = this.value;
-                 hasMore = true;
-                 lastVisible = null;
-                 loadComplaints(true);
-             });
-
-             // Agent filter
-             document.getElementById('searchAgent').addEventListener('change', function() {
-                 currentFilters.agent = this.value;
-                 hasMore = true;
-                 lastVisible = null;
-                 loadComplaints(true);
-             });
-
-             // Month filter
-             document.getElementById('searchMonth').addEventListener('change', function() {
-                 currentFilters.month = this.value;
-                 hasMore = true;
-                 lastVisible = null;
-                 loadComplaints(true);
-             });
-
-             // Download Excel button
-             document.getElementById('downloadExcelBtn').addEventListener('click', function() {
-                 downloadExcelData();
-             });
+              // Download Excel button
+              document.getElementById('downloadExcelBtn').addEventListener('click', function() {
+                  downloadExcelData();
+              });
          }
 
         // Search by complaint job number
@@ -920,8 +984,7 @@
 
                 // Apply brand filter if provided
                 if (currentFilters.brand) {
-                    query = query.where('brand', '>=', currentFilters.brand)
-                               .where('brand', '<=', currentFilters.brand + '\uf8ff');
+                    query = query.where('brand', '==', currentFilters.brand);
                 }
 
                 // Apply category filter if provided
@@ -1029,6 +1092,7 @@
                 document.getElementById('underWarranty').value = complaint.underWarranty || '';
                 document.getElementById('brand').value = complaint.brand || '';
                 document.getElementById('itemSerialNumber').value = complaint.itemSerialNumber || '';
+                document.getElementById('numberOfProducts').value = complaint.numberOfProducts || 1;
                 document.getElementById('priority').value = complaint.priority || 'Low';
                 document.getElementById('agent').value = complaint.agentId || '';
                 document.getElementById('agentTelegramId').value = complaint.agentTelegramId || '';
@@ -1123,7 +1187,10 @@
                     .get();
 
                 const brandSelect = document.getElementById('brand');
+                const searchBrandSelect = document.getElementById('searchBrand');
+                
                 brandSelect.innerHTML = '<option value="">Select Brand</option>';
+                searchBrandSelect.innerHTML = '<option value="">All Brands</option>';
 
                 brandsSnapshot.forEach(doc => {
                     const brand = doc.data();
@@ -1131,6 +1198,11 @@
                     option.value = brand.brandName;
                     option.textContent = brand.brandName;
                     brandSelect.appendChild(option);
+                    
+                    const searchOption = document.createElement('option');
+                    searchOption.value = brand.brandName;
+                    searchOption.textContent = brand.brandName;
+                    searchBrandSelect.appendChild(searchOption);
                 });
             } catch (error) {
                 console.error('Error loading brands:', error);
@@ -1172,6 +1244,8 @@
                 console.error('Error loading agents:', error);
             }
         }
+
+
 
         // Generate job number
         function generateJobNumber() {
@@ -1274,6 +1348,7 @@ ${action} COMPLAINT NOTIFICATION
 • Brand: ${escapeMarkdown(complaintData.brand)}
 • Category: ${escapeMarkdown(complaintData.category)}
 • Serial Number: ${escapeMarkdown(complaintData.itemSerialNumber)}
+• No. of Products: ${complaintData.numberOfProducts || 1}
 • Priority: ${complaintData.priority === 'High' ? '🔴 HIGH' : '🟡 LOW'}
 
 🔧 *Service Information*
@@ -1349,6 +1424,7 @@ ${action} COMPLAINT NOTIFICATION
 • Brand: ${complaintData.brand || 'N/A'}
 • Category: ${complaintData.category || 'N/A'}
 • Serial Number: ${complaintData.itemSerialNumber || 'N/A'}
+• No. of Products: ${complaintData.numberOfProducts || 1}
 • Priority: ${complaintData.priority === 'High' ? '🔴 HIGH' : '🟡 LOW'}
 
 🔧 Service Information
@@ -1443,6 +1519,7 @@ ${complaintData.companyCode || 'N/A'}
             document.getElementById('complaintDate').value = today;
             document.getElementById('jobDate').value = today;
             document.getElementById('priority').value = 'Low';
+            document.getElementById('numberOfProducts').value = 1;
             document.getElementById('agentTelegramId').value = '';
             document.getElementById('jobNumber').value = '';
             
@@ -1490,8 +1567,7 @@ ${complaintData.companyCode || 'N/A'}
 
                 // Apply brand filter if provided
                 if (currentFilters.brand) {
-                    query = query.where('brand', '>=', currentFilters.brand)
-                               .where('brand', '<=', currentFilters.brand + '\uf8ff');
+                    query = query.where('brand', '==', currentFilters.brand);
                 }
 
                 // Apply category filter if provided
@@ -1528,7 +1604,7 @@ ${complaintData.companyCode || 'N/A'}
                 const headers = [
                     'Customer Name', 'Phone Number', 'Alternate Number', 'Email', 'Address', 'Pin Code',
                     'Dealer', 'Complaint Date', 'Description', 'Category', 'Purchase Date', 'Under Warranty',
-                    'Brand', 'Item Serial Number', 'Priority', 'Agent', 'Job Date', 'Job Number', 'Reason', 'Status'
+                    'Brand', 'Item Serial Number', 'No. of Products', 'Priority', 'Agent', 'Job Date', 'Job Number', 'Reason', 'Status'
                 ];
                 excelData.push(headers);
 
@@ -1563,6 +1639,7 @@ ${complaintData.companyCode || 'N/A'}
                         complaint.underWarranty || '',
                         complaint.brand || '',
                         complaint.itemSerialNumber || '',
+                        complaint.numberOfProducts || 1,
                         complaint.priority || 'Low',
                         agentNames[complaint.agentId] || '',
                         complaint.jobDate || '',
@@ -1635,6 +1712,7 @@ ${complaintData.companyCode || 'N/A'}
                 underWarranty: document.getElementById('underWarranty').value,
                 brand: document.getElementById('brand').value,
                 itemSerialNumber: document.getElementById('itemSerialNumber').value,
+                numberOfProducts: parseInt(document.getElementById('numberOfProducts').value) || 1,
                 priority: document.getElementById('priority').value,
                 agentId: document.getElementById('agent').value,
                 agentTelegramId: document.getElementById('agentTelegramId').value,
