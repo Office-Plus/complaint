@@ -267,7 +267,7 @@
                  /* Search filters */
          .search-filters {
              display: grid;
-             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
              gap: 15px;
              margin-bottom: 20px;
              align-items: end;
@@ -374,7 +374,7 @@
 
          @media (min-width: 1401px) {
              .search-filters {
-                 grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+                 grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
                  gap: 15px;
              }
          }
@@ -663,6 +663,21 @@
                      <option value="11">November</option>
                      <option value="12">December</option>
                  </select>
+                 <select id="searchClosedMonth">
+                     <option value="">Closed Complaints by Month</option>
+                     <option value="January">January</option>
+                     <option value="February">February</option>
+                     <option value="March">March</option>
+                     <option value="April">April</option>
+                     <option value="May">May</option>
+                     <option value="June">June</option>
+                     <option value="July">July</option>
+                     <option value="August">August</option>
+                     <option value="September">September</option>
+                     <option value="October">October</option>
+                     <option value="November">November</option>
+                     <option value="December">December</option>
+                 </select>
                  <button type="button" id="searchBtn" class="search-btn" title="Search">
                      🔍 Search
                  </button>
@@ -685,6 +700,7 @@
                         <th>Priority</th>
                         <th>Status</th>
                         <th>Complaint Date</th>
+                        <th>Closed Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -748,7 +764,8 @@
             status: 'Open',
             category: '',
             agent: '',
-            month: ''
+            month: '',
+            closedMonth: ''
         };
 
         // Load data when the page loads
@@ -844,6 +861,7 @@
                   currentFilters.category = document.getElementById('searchCategory').value;
                   currentFilters.agent = document.getElementById('searchAgent').value;
                   currentFilters.month = document.getElementById('searchMonth').value;
+                  currentFilters.closedMonth = document.getElementById('searchClosedMonth').value;
                   
                   // Reset pagination and load complaints
                   hasMore = true;
@@ -860,7 +878,8 @@
                       status: 'Open',
                       category: '',
                       agent: '',
-                      month: ''
+                      month: '',
+                      closedMonth: ''
                   };
                   
                   // Reset form values
@@ -871,6 +890,7 @@
                   document.getElementById('searchCategory').value = '';
                   document.getElementById('searchAgent').value = '';
                   document.getElementById('searchMonth').value = '';
+                  document.getElementById('searchClosedMonth').value = '';
                   
                   // Reset pagination and load complaints
                   hasMore = true;
@@ -885,6 +905,57 @@
                   downloadExcelData();
               });
          }
+
+        // Helper function to format closedAt date
+        function formatClosedDate(closedAt) {
+            if (!closedAt) return '';
+            
+            // If it's already a string in the correct format, return it
+            if (typeof closedAt === 'string') {
+                return closedAt;
+            }
+            
+            // If it's a Firestore Timestamp, convert it
+            if (closedAt.toDate && typeof closedAt.toDate === 'function') {
+                const date = closedAt.toDate();
+                return formatDateToReadable(date);
+            }
+            
+            // If it's a Date object
+            if (closedAt instanceof Date) {
+                return formatDateToReadable(closedAt);
+            }
+            
+            // If it has seconds property (Timestamp-like)
+            if (closedAt.seconds) {
+                const date = new Date(closedAt.seconds * 1000);
+                return formatDateToReadable(date);
+            }
+            
+            return String(closedAt);
+        }
+
+        // Helper function to format a Date object to readable string
+        function formatDateToReadable(date) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = monthNames[date.getMonth()];
+            const day = date.getDate();
+            const year = date.getFullYear();
+            const hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            
+            // Calculate timezone offset (UTC+5:30 for IST)
+            const timezoneOffset = date.getTimezoneOffset();
+            const offsetHours = Math.abs(Math.floor(timezoneOffset / 60));
+            const offsetMinutes = Math.abs(timezoneOffset % 60);
+            const offsetSign = timezoneOffset <= 0 ? '+' : '-';
+            
+            return `${month} ${day}, ${year} at ${displayHours}:${minutes}:${seconds} ${ampm} UTC${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`;
+        }
 
         // Search by complaint job number
         async function searchByComplaintNo(jobNumber) {
@@ -913,6 +984,9 @@
                     const doc = snapshot.docs[0];
                     const complaint = doc.data();
                     
+                    // Format closed date for display
+                    const closedDateDisplay = formatClosedDate(complaint.closedAt);
+                    
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${complaint.customerName || ''}</td>
@@ -923,6 +997,7 @@
                         <td><span class="priority-badge priority-${complaint.priority?.toLowerCase() || 'low'}">${complaint.priority || 'Low'}</span></td>
                         <td><span class="status-badge status-${complaint.status?.toLowerCase() || 'open'}">${complaint.status || 'Open'}</span></td>
                         <td>${complaint.complaintDate || ''}</td>
+                        <td>${closedDateDisplay}</td>
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
                             <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
@@ -972,7 +1047,10 @@
                     .where('companyCode', '==', companyCode);
 
                 // Apply status filter first (required for Firestore)
-                if (currentFilters.status) {
+                // If closed month is selected, force status to 'Closed' since we're looking for closed complaints
+                if (currentFilters.closedMonth) {
+                    query = query.where('status', '==', 'Closed');
+                } else if (currentFilters.status) {
                     query = query.where('status', '==', currentFilters.status);
                 }
 
@@ -1021,6 +1099,87 @@
                     return;
                 }
 
+                // Filter by closed month if specified (client-side filtering)
+                // Shows complaints where: 1) closedAt exists, 2) createdAt month matches selected month
+                let filteredDocs = snapshot.docs;
+                if (currentFilters.closedMonth) {
+                    console.log('Filtering by closed month:', currentFilters.closedMonth);
+                    console.log('Total docs before filtering:', snapshot.docs.length);
+                    
+                    filteredDocs = snapshot.docs.filter(doc => {
+                        const complaint = doc.data();
+                        const closedAt = complaint.closedAt;
+                        const createdAt = complaint.createdAt;
+                        
+                        // Debug: Log each complaint's fields
+                        console.log('Complaint closedAt:', closedAt);
+                        console.log('Complaint createdAt:', createdAt);
+                        console.log('Type of createdAt:', typeof createdAt);
+                        
+                        // Must have closedAt field
+                        if (!closedAt) {
+                            console.log('No closedAt field, skipping');
+                            return false;
+                        }
+                        
+                        // Extract month from createdAt
+                        if (!createdAt) {
+                            console.log('No createdAt field, skipping');
+                            return false;
+                        }
+                        
+                        let createdAtString = '';
+                        let extractedMonth = '';
+                        
+                        // Handle different createdAt formats
+                        if (typeof createdAt === 'string') {
+                            // If it's already a string like "September 29, 2025 at 1:43:58 PM UTC+5:30"
+                            createdAtString = createdAt;
+                            const monthMatch = createdAtString.match(/^(\w+)/);
+                            if (monthMatch) {
+                                extractedMonth = monthMatch[1];
+                            }
+                        } else if (createdAt.toDate && typeof createdAt.toDate === 'function') {
+                            // If it's a Firestore Timestamp
+                            const date = createdAt.toDate();
+                            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                              'July', 'August', 'September', 'October', 'November', 'December'];
+                            extractedMonth = monthNames[date.getMonth()];
+                            createdAtString = date.toString();
+                        } else if (createdAt instanceof Date) {
+                            // If it's a Date object
+                            const date = createdAt;
+                            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                              'July', 'August', 'September', 'October', 'November', 'December'];
+                            extractedMonth = monthNames[date.getMonth()];
+                            createdAtString = date.toString();
+                        } else if (createdAt.seconds) {
+                            // If it's a Timestamp object with seconds property
+                            const date = new Date(createdAt.seconds * 1000);
+                            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                              'July', 'August', 'September', 'October', 'November', 'December'];
+                            extractedMonth = monthNames[date.getMonth()];
+                            createdAtString = date.toString();
+                        }
+                        
+                        if (extractedMonth) {
+                            console.log('Extracted month from createdAt:', extractedMonth, 'Looking for:', currentFilters.closedMonth);
+                            return extractedMonth === currentFilters.closedMonth;
+                        }
+                        
+                        console.log('No month match found in createdAt');
+                        return false;
+                    });
+                    
+                    console.log('Filtered docs count:', filteredDocs.length);
+                }
+
+                if (filteredDocs.length === 0) {
+                    hasMore = false;
+                    document.getElementById('noMore').style.display = 'block';
+                    return;
+                }
+
                 lastVisible = snapshot.docs[snapshot.docs.length - 1];
                 const tbody = document.getElementById('complaintTable');
                 
@@ -1028,8 +1187,12 @@
                     tbody.innerHTML = '';
                 }
 
-                snapshot.forEach(doc => {
+                filteredDocs.forEach(doc => {
                     const complaint = doc.data();
+                    
+                    // Format closed date for display
+                    const closedDateDisplay = formatClosedDate(complaint.closedAt);
+                    
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${complaint.customerName || ''}</td>
@@ -1040,6 +1203,7 @@
                         <td><span class="priority-badge priority-${complaint.priority?.toLowerCase() || 'low'}">${complaint.priority || 'Low'}</span></td>
                         <td><span class="status-badge status-${complaint.status?.toLowerCase() || 'open'}">${complaint.status || 'Open'}</span></td>
                         <td>${complaint.complaintDate || ''}</td>
+                        <td>${closedDateDisplay}</td>
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
                             <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
@@ -1555,7 +1719,10 @@ ${complaintData.companyCode || 'N/A'}
                     .where('companyCode', '==', companyCode);
 
                 // Apply status filter first (required for Firestore)
-                if (currentFilters.status) {
+                // If closed month is selected, force status to 'Closed' since we're looking for closed complaints
+                if (currentFilters.closedMonth) {
+                    query = query.where('status', '==', 'Closed');
+                } else if (currentFilters.status) {
                     query = query.where('status', '==', currentFilters.status);
                 }
 
@@ -1597,14 +1764,62 @@ ${complaintData.companyCode || 'N/A'}
                     return;
                 }
 
-                console.log(`Found ${snapshot.size} records for Excel download`);
+                // Filter by closed month if specified (client-side filtering)
+                // Shows complaints where: 1) closedAt exists, 2) createdAt month matches selected month
+                let filteredDocs = snapshot.docs;
+                if (currentFilters.closedMonth) {
+                    filteredDocs = snapshot.docs.filter(doc => {
+                        const complaint = doc.data();
+                        const closedAt = complaint.closedAt;
+                        const createdAt = complaint.createdAt;
+                        
+                        // Must have closedAt field
+                        if (!closedAt) return false;
+                        
+                        // Extract month from createdAt
+                        if (!createdAt) return false;
+                        
+                        let extractedMonth = '';
+                        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                          'July', 'August', 'September', 'October', 'November', 'December'];
+                        
+                        // Handle different createdAt formats
+                        if (typeof createdAt === 'string') {
+                            // If it's already a string like "September 29, 2025 at 1:43:58 PM UTC+5:30"
+                            const monthMatch = createdAt.match(/^(\w+)/);
+                            if (monthMatch) {
+                                extractedMonth = monthMatch[1];
+                            }
+                        } else if (createdAt.toDate && typeof createdAt.toDate === 'function') {
+                            // If it's a Firestore Timestamp
+                            const date = createdAt.toDate();
+                            extractedMonth = monthNames[date.getMonth()];
+                        } else if (createdAt instanceof Date) {
+                            // If it's a Date object
+                            extractedMonth = monthNames[createdAt.getMonth()];
+                        } else if (createdAt.seconds) {
+                            // If it's a Timestamp object with seconds property
+                            const date = new Date(createdAt.seconds * 1000);
+                            extractedMonth = monthNames[date.getMonth()];
+                        }
+                        
+                        return extractedMonth === currentFilters.closedMonth;
+                    });
+                }
+
+                if (filteredDocs.length === 0) {
+                    showNotification('No data found for the selected filters.', 'error');
+                    return;
+                }
+
+                console.log(`Found ${filteredDocs.length} records for Excel download`);
 
                 // Prepare data for Excel
                 const excelData = [];
                 const headers = [
                     'Customer Name', 'Phone Number', 'Alternate Number', 'Email', 'Address', 'Pin Code',
                     'Dealer', 'Complaint Date', 'Description', 'Category', 'Purchase Date', 'Under Warranty',
-                    'Brand', 'Item Serial Number', 'No. of Products', 'Priority', 'Agent', 'Job Date', 'Job Number', 'Reason', 'Status'
+                    'Brand', 'Item Serial Number', 'No. of Products', 'Priority', 'Agent', 'Job Date', 'Job Number', 'Reason', 'Status', 'Closed Date'
                 ];
                 excelData.push(headers);
 
@@ -1622,8 +1837,12 @@ ${complaintData.companyCode || 'N/A'}
                     agentNames[doc.id] = doc.data().agentName;
                 });
 
-                snapshot.forEach(doc => {
+                filteredDocs.forEach(doc => {
                     const complaint = doc.data();
+                    
+                    // Format closed date for Excel
+                    const closedDateDisplay = formatClosedDate(complaint.closedAt);
+                    
                     const row = [
                         complaint.customerName || '',
                         complaint.phoneNumber || '',
@@ -1645,7 +1864,8 @@ ${complaintData.companyCode || 'N/A'}
                         complaint.jobDate || '',
                         complaint.jobNumber || '',
                         complaint.reason || '',
-                        complaint.status || 'Open'
+                        complaint.status || 'Open',
+                        closedDateDisplay
                     ];
                     excelData.push(row);
                 });
@@ -1669,6 +1889,7 @@ ${complaintData.companyCode || 'N/A'}
                                       'July', 'August', 'September', 'October', 'November', 'December'];
                     activeFilters.push(monthNames[parseInt(currentFilters.month)]);
                 }
+                if (currentFilters.closedMonth) activeFilters.push(`Closed_${currentFilters.closedMonth}`);
                 if (currentFilters.status && currentFilters.status !== 'Open') activeFilters.push(currentFilters.status);
                 
                 if (activeFilters.length > 0) {
@@ -1678,7 +1899,7 @@ ${complaintData.companyCode || 'N/A'}
 
                 // Download the file
                 XLSX.writeFile(workbook, filename);
-                showNotification(`Excel file downloaded successfully! (${snapshot.size} records)`);
+                showNotification(`Excel file downloaded successfully! (${filteredDocs.length} records)`);
 
             } catch (error) {
                 console.error('Error downloading Excel:', error);
