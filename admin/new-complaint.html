@@ -1654,6 +1654,62 @@ ${complaintData.companyCode || 'N/A'}
             }
         }
 
+        // Send SMS notification
+        async function sendSMS(phoneNumber, jobNumber) {
+            try {
+                // Prepare SMS message with job number
+                const message = `We have received your complaint. Your Complaint No. is ${jobNumber}. Our team is working on it and will update you shortly. #ERICSON ELECTRONICS`;
+                
+                // Prepare request data
+                const requestData = {
+                    senderId: "ERCSON",
+                    is_Unicode: false,
+                    is_Flash: false,
+                    dataCoding: 0,
+                    message: message,
+                    mobileNumbers: phoneNumber,
+                    apiKey: "q1Jfb7BYs9bpNDwGeJ1F7wH+F8lnRv9G7J9I4Bp7pEs=",
+                    clientId: "f018faaa-f935-4c62-b932-ea89581c1209"
+                };
+
+                // Send SMS using fetch API
+                const response = await fetch("http://103.153.58.65/api/v2/SendSMS", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                console.log('SMS API Response:', result);
+
+                // Check if SMS was sent successfully
+                if (result.ErrorCode === 0 && result.Data && result.Data.length > 0) {
+                    const smsData = result.Data[0];
+                    if (smsData.MessageErrorCode === 0) {
+                        const messageId = smsData.MessageId;
+                        const mobileNumber = smsData.MobileNumber;
+                        console.log('SMS sent successfully! MessageId:', messageId);
+                        showNotification(`SMS sent successfully to ${mobileNumber}! MessageId: ${messageId}`);
+                        return { success: true, messageId: messageId, mobileNumber: mobileNumber };
+                    } else {
+                        console.error('SMS Error:', smsData.MessageErrorDescription);
+                        showNotification(`SMS failed: ${smsData.MessageErrorDescription}`, 'error');
+                        return { success: false, error: smsData.MessageErrorDescription };
+                    }
+                } else {
+                    console.error('SMS API Error:', result.ErrorDescription);
+                    showNotification(`SMS failed: ${result.ErrorDescription || 'Unknown error'}`, 'error');
+                    return { success: false, error: result.ErrorDescription || 'Unknown error' };
+                }
+            } catch (error) {
+                console.error('Error sending SMS:', error);
+                showNotification('Error sending SMS. Please try again.', 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
         // Event listeners
         document.getElementById('agent').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -1974,6 +2030,11 @@ ${complaintData.companyCode || 'N/A'}
                     
                     // Send Telegram notification for new complaint
                     await sendTelegramNotification(complaintData, false);
+                    
+                    // Send SMS notification for new complaint (only if phone number and job number exist)
+                    if (complaintData.phoneNumber && complaintData.jobNumber) {
+                        await sendSMS(complaintData.phoneNumber, complaintData.jobNumber);
+                    }
                 }
 
                 resetForm();
