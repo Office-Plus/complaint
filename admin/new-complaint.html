@@ -560,8 +560,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="brand">Brand</label>
-                            <select id="brand">
+                            <label for="brand">Brand <span class="required">*</span></label>
+                            <select id="brand" required>
                                 <option value="">Select Brand</option>
                             </select>
                         </div>
@@ -603,12 +603,12 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="jobDate">Job Date</label>
-                            <input type="date" id="jobDate">
+                            <label for="jobDate">Job Date <span class="required">*</span></label>
+                            <input type="date" id="jobDate" required>
                         </div>
                         <div class="form-group">
-                            <label for="jobNumber">Job Number</label>
-                            <input type="text" id="jobNumber" readonly>
+                            <label for="jobNumber">Job Number <small style="color: #666; font-weight: normal;">(Auto-generated)</small></label>
+                            <input type="text" id="jobNumber" readonly placeholder="Will be auto-generated">
                         </div>
                     </div>
 
@@ -1657,23 +1657,19 @@ ${complaintData.companyCode || 'N/A'}
         // Send SMS notification
         async function sendSMS(phoneNumber, jobNumber) {
             try {
-                // Prepare SMS message with job number
-                const message = `We have received your complaint. Your Complaint No. is ${jobNumber}. Our team is working on it and will update you shortly. #ERICSON ELECTRONICS`;
+                console.log('SMS Function called with:', { phoneNumber, jobNumber });
                 
-                // Prepare request data
+                // Prepare request data for PHP proxy
                 const requestData = {
-                    senderId: "ERCSON",
-                    is_Unicode: false,
-                    is_Flash: false,
-                    dataCoding: 0,
-                    message: message,
-                    mobileNumbers: phoneNumber,
-                    apiKey: "q1Jfb7BYs9bpNDwGeJ1F7wH+F8lnRv9G7J9I4Bp7pEs=",
-                    clientId: "f018faaa-f935-4c62-b932-ea89581c1209"
+                    phoneNumber: phoneNumber,
+                    jobNumber: jobNumber
                 };
 
-                // Send SMS using fetch API
-                const response = await fetch("http://103.153.58.65/api/v2/SendSMS", {
+                console.log('Sending SMS request via PHP proxy...');
+
+                // Send SMS using PHP proxy to avoid CORS issues
+                // PATH: ../sendsms.php (root folder) - Update this path when hosting online
+                const response = await fetch("http://paezr.com/complaint-sms/sendsms.php", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -1681,31 +1677,32 @@ ${complaintData.companyCode || 'N/A'}
                     body: JSON.stringify(requestData)
                 });
 
+                console.log('SMS Proxy HTTP Status:', response.status);
+
+                if (!response.ok) {
+                    console.error('SMS Proxy HTTP Error:', response.statusText);
+                    showNotification(`SMS Proxy Error: ${response.status} ${response.statusText}`, 'error');
+                    return { success: false, error: `HTTP ${response.status}` };
+                }
+
                 const result = await response.json();
-                console.log('SMS API Response:', result);
+                console.log('SMS Proxy Response:', result);
 
                 // Check if SMS was sent successfully
-                if (result.ErrorCode === 0 && result.Data && result.Data.length > 0) {
-                    const smsData = result.Data[0];
-                    if (smsData.MessageErrorCode === 0) {
-                        const messageId = smsData.MessageId;
-                        const mobileNumber = smsData.MobileNumber;
-                        console.log('SMS sent successfully! MessageId:', messageId);
-                        showNotification(`SMS sent successfully to ${mobileNumber}! MessageId: ${messageId}`);
-                        return { success: true, messageId: messageId, mobileNumber: mobileNumber };
-                    } else {
-                        console.error('SMS Error:', smsData.MessageErrorDescription);
-                        showNotification(`SMS failed: ${smsData.MessageErrorDescription}`, 'error');
-                        return { success: false, error: smsData.MessageErrorDescription };
-                    }
+                if (result.success) {
+                    const messageId = result.messageId;
+                    const mobileNumber = result.mobileNumber;
+                    console.log('SMS sent successfully! MessageId:', messageId);
+                    showNotification(`SMS sent successfully to ${mobileNumber}! MessageId: ${messageId}`);
+                    return { success: true, messageId: messageId, mobileNumber: mobileNumber };
                 } else {
-                    console.error('SMS API Error:', result.ErrorDescription);
-                    showNotification(`SMS failed: ${result.ErrorDescription || 'Unknown error'}`, 'error');
-                    return { success: false, error: result.ErrorDescription || 'Unknown error' };
+                    console.error('SMS Error:', result.error);
+                    showNotification(`SMS failed: ${result.error}`, 'error');
+                    return { success: false, error: result.error };
                 }
             } catch (error) {
                 console.error('Error sending SMS:', error);
-                showNotification('Error sending SMS. Please try again.', 'error');
+                showNotification('Error sending SMS. Please check if sendsms.php is accessible.', 'error');
                 return { success: false, error: error.message };
             }
         }
@@ -1974,6 +1971,31 @@ ${complaintData.companyCode || 'N/A'}
             const companyCode = localStorage.getItem('companyCode');
             const userId = localStorage.getItem('userId');
 
+            // Ensure job number is generated before submission
+            let jobNumber = document.getElementById('jobNumber').value;
+            if (!jobNumber) {
+                jobNumber = generateJobNumber();
+                document.getElementById('jobNumber').value = jobNumber;
+                console.log('Auto-generated job number on submit:', jobNumber);
+            }
+
+            // Validate required fields for job number generation
+            if (!jobNumber) {
+                const jobDate = document.getElementById('jobDate').value;
+                const brand = document.getElementById('brand').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                
+                let missingFields = [];
+                if (!jobDate) missingFields.push('Job Date');
+                if (!brand) missingFields.push('Brand');
+                if (!phoneNumber) missingFields.push('Phone Number');
+                
+                if (missingFields.length > 0) {
+                    showNotification(`Cannot generate Job Number. Missing: ${missingFields.join(', ')}`, 'error');
+                    return;
+                }
+            }
+
             const complaintData = {
                 customerName: document.getElementById('customerName').value,
                 complaintDate: document.getElementById('complaintDate').value,
@@ -1994,7 +2016,7 @@ ${complaintData.companyCode || 'N/A'}
                 agentId: document.getElementById('agent').value,
                 agentTelegramId: document.getElementById('agentTelegramId').value,
                 jobDate: document.getElementById('jobDate').value,
-                jobNumber: document.getElementById('jobNumber').value,
+                jobNumber: jobNumber,
                 reason: document.getElementById('reason').value,
                 companyCode: companyCode,
                 updatedAt: new Date()
@@ -2032,8 +2054,23 @@ ${complaintData.companyCode || 'N/A'}
                     await sendTelegramNotification(complaintData, false);
                     
                     // Send SMS notification for new complaint (only if phone number and job number exist)
+                    console.log('Checking SMS conditions:', {
+                        phoneNumber: complaintData.phoneNumber,
+                        jobNumber: complaintData.jobNumber
+                    });
+                    
                     if (complaintData.phoneNumber && complaintData.jobNumber) {
-                        await sendSMS(complaintData.phoneNumber, complaintData.jobNumber);
+                        console.log('Sending SMS to:', complaintData.phoneNumber, 'with job number:', complaintData.jobNumber);
+                        const smsResult = await sendSMS(complaintData.phoneNumber, complaintData.jobNumber);
+                        console.log('SMS Result:', smsResult);
+                    } else {
+                        console.warn('SMS not sent - Missing phone number or job number');
+                        if (!complaintData.phoneNumber) {
+                            showNotification('Phone number is missing - SMS not sent', 'error');
+                        }
+                        if (!complaintData.jobNumber) {
+                            showNotification('Job number is missing - SMS not sent', 'error');
+                        }
                     }
                 }
 
