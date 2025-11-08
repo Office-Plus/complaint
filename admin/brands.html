@@ -72,6 +72,11 @@
             box-sizing: border-box;
         }
 
+        .form-group input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -319,7 +324,7 @@
                         </div>
                         <div class="form-group">
                             <label for="companyCode">Company Code</label>
-                            <input type="text" id="companyCode" required>
+                            <input type="text" id="companyCode" required readonly>
                         </div>
                         <div class="form-group">
                             <label for="status">Status</label>
@@ -656,6 +661,7 @@
 
                 this.reset();
                 delete this.dataset.editId;
+                prefillCompanyCode(); // Refill the Company Code after reset
                 loadBrands(true); // Reset the list
             } catch (error) {
                 console.error('Error saving brand:', error);
