@@ -1110,7 +1110,7 @@
                         <td>${closedDateDisplay}</td>
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
-                            <!-- <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button> -->
+                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -1435,7 +1435,7 @@
                         <td>${closedDateDisplay}</td>
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
-                            <!-- <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button> -->
+                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -2238,6 +2238,12 @@ ${complaintData.companyCode || 'N/A'}
             const companyCode = localStorage.getItem('companyCode');
             const userId = localStorage.getItem('userId');
             const editId = this.dataset.editId;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Disable submit button to prevent multiple submissions
+            submitBtn.disabled = true;
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.textContent = editId ? 'Updating...' : 'Submitting...';
             
             console.log('Form Mode:', editId ? 'EDITING EXISTING COMPLAINT' : 'CREATING NEW COMPLAINT');
             console.log('Edit ID:', editId || 'None (new complaint)');
@@ -2265,6 +2271,9 @@ ${complaintData.companyCode || 'N/A'}
                 
                 if (missingFields.length > 0) {
                     showNotification(`Cannot generate Job Number. Missing: ${missingFields.join(', ')}`, 'error');
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
                     return;
                 }
             }
@@ -2320,6 +2329,28 @@ ${complaintData.companyCode || 'N/A'}
                     // Send Telegram notification for update
                     await sendTelegramNotification(complaintData, true);
                 } else {
+                    // Check if complaint with same job number already exists (for new complaints only)
+                    console.log('=== CHECKING FOR DUPLICATE COMPLAINT NUMBER ===');
+                    const duplicateCheck = await db.collection('complaints')
+                        .doc('cmplts')
+                        .collection(companyCode)
+                        .doc('complaints')
+                        .collection('complaints-coll')
+                        .where('jobNumber', '==', jobNumber)
+                        .where('companyCode', '==', companyCode)
+                        .get();
+                    
+                    if (!duplicateCheck.empty) {
+                        console.warn('✗ DUPLICATE COMPLAINT NUMBER DETECTED:', jobNumber);
+                        showNotification(`Complaint number ${jobNumber} already exists! Please refresh the form.`, 'error');
+                        // Re-enable submit button
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalBtnText;
+                        return;
+                    }
+                    
+                    console.log('✓ No duplicate found. Proceeding with complaint creation.');
+                    
                     // Create new complaint
                     complaintData.createdBy = userId;
                     complaintData.createdAt = new Date();
@@ -2362,13 +2393,20 @@ ${complaintData.companyCode || 'N/A'}
                     }
                 }
 
+                // Reset form and re-enable button after successful submission
                 resetForm();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Complaint';
+                
                 if (editId) {
                     loadComplaints(true); // Refresh the list if editing
                 }
             } catch (error) {
                 console.error('Error submitting complaint:', error);
                 showNotification('Error submitting complaint. Please try again.', 'error');
+                // Re-enable submit button on error
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
         });
     </script>
