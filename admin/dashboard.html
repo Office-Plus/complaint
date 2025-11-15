@@ -805,7 +805,7 @@
 
                 console.log('📊 Generating Day End Report...');
 
-                // Query today's open complaints
+                // Query today's open complaints (small query - always fresh)
                 const todayOpenSnapshot = await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
@@ -816,7 +816,7 @@
                     .where('complaintDate', '==', todayStr)
                     .get();
 
-                // Query today's closed complaints
+                // Query today's closed complaints (small query - always fresh)
                 const todayClosedSnapshot = await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
@@ -827,7 +827,7 @@
                     .where('complaintDate', '==', todayStr)
                     .get();
 
-                // Query total open complaints till now
+                // Query total open complaints till now (medium query - needed for accuracy)
                 const totalOpenSnapshot = await db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
@@ -837,39 +837,9 @@
                     .where('status', '==', 'Open')
                     .get();
 
-                // Get all complaints for month-wise summary
-                const allComplaintsSnapshot = await db.collection('complaints')
-                    .doc('cmplts')
-                    .collection(companyCode)
-                    .doc('complaints')
-                    .collection('complaints-coll')
-                    .where('companyCode', '==', companyCode)
-                    .get();
-
                 const todayOpenCount = todayOpenSnapshot.size;
                 const todayClosedCount = todayClosedSnapshot.size;
                 const totalOpenCount = totalOpenSnapshot.size;
-
-                // Process month-wise data
-                const monthWiseData = {};
-                allComplaintsSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    const complaintDate = data.complaintDate || '';
-                    if (complaintDate) {
-                        const monthYear = complaintDate.substring(0, 7); // YYYY-MM
-                        if (!monthWiseData[monthYear]) {
-                            monthWiseData[monthYear] = { open: 0, closed: 0 };
-                        }
-                        if (data.status === 'Open') {
-                            monthWiseData[monthYear].open++;
-                        } else if (data.status === 'Closed') {
-                            monthWiseData[monthYear].closed++;
-                        }
-                    }
-                });
-
-                // Sort months
-                const sortedMonths = Object.keys(monthWiseData).sort().reverse();
 
                 // Generate PDF
                 const { jsPDF } = window.jspdf;
@@ -899,45 +869,7 @@
                 doc.text(`Today's Closed Complaints: ${todayClosedCount}`, 20, yPos);
                 yPos += 7;
                 doc.text(`Total Open Complaints (Till Now): ${totalOpenCount}`, 20, yPos);
-                yPos += 15;
-
-                // Month-wise Summary Table
-                doc.setFontSize(14);
-                doc.text('Month-wise Summary', 14, yPos);
-                yPos += 10;
-
-                // Prepare table data
-                const tableData = [];
-                if (sortedMonths.length > 0) {
-                    sortedMonths.forEach(month => {
-                        const monthName = new Date(month + '-01').toLocaleString('en-US', { month: 'long', year: 'numeric' });
-                        tableData.push([
-                            monthName,
-                            monthWiseData[month].open.toString(),
-                            monthWiseData[month].closed.toString(),
-                            (monthWiseData[month].open + monthWiseData[month].closed).toString()
-                        ]);
-                    });
-
-                    // Add table
-                    doc.autoTable({
-                        startY: yPos,
-                        head: [['Month', 'Open', 'Closed', 'Total']],
-                        body: tableData,
-                        theme: 'striped',
-                        headStyles: { fillColor: [33, 150, 243], textColor: 255 },
-                        styles: { fontSize: 10 },
-                        margin: { left: 14, right: 14 }
-                    });
-
-                    // Get final Y position after table
-                    yPos = doc.lastAutoTable.finalY + 15;
-                } else {
-                    // No month data available
-                    doc.setFontSize(11);
-                    doc.text('No month-wise data available', 20, yPos);
-                    yPos += 15;
-                }
+                yPos += 20;
 
                 // Footer - Printed by and time
                 doc.setFontSize(10);
