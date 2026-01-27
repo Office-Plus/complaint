@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Reports - INDIBULL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #2196F3;
+        }
+
+        .welcome-message {
+            color: #333;
+            font-size: 16px;
+            flex-grow: 1;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        .report-option {
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .report-option:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .report-option:active {
+            transform: translateY(0);
+        }
+
+        .complaints-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .complaints-table th,
+        .complaints-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .complaints-table th {
+            background-color: #2196F3;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 70px;
+        }
+
+        .complaints-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .complaints-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .days-open {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .days-open.high {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .days-open.medium {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+
+        .days-open.low {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .back-btn {
+            background-color: #666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="welcome-message" id="welcomeMessage"></div>
+        <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <!-- Include the shared menu -->
+    <div id="menuContainer"></div>
+
+    <div class="main-content">
+        <div class="card">
+            <h2>📊 Reports</h2>
+            <button class="report-option" onclick="showOpenComplaintsDaywise()">
+                📅 Open Complaints Daywise
+            </button>
+        </div>
+
+        <div class="card" id="resultsCard" style="display: none;">
+            <h2 id="resultsTitle">Open Complaints</h2>
+            <div id="resultsContent">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    
+    <script src="menu.js"></script>
+    <script>
+        // Load the menu
+        fetch('menu.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('menuContainer').innerHTML = html;
+            });
+
+        // Check authentication
+        const initialUserEmail = localStorage.getItem('userEmail');
+        const initialUserId = localStorage.getItem('userId');
+        
+        if (!initialUserEmail || !initialUserId) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${initialUserEmail}`;
+        }
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvTaQfcJsj7nGSOQxEdLjCbCenmDEC3Ns",
+            authDomain: "lovable-9c76e.firebaseapp.com",
+            projectId: "lovable-9c76e",
+            storageBucket: "lovable-9c76e.firebasestorage.app",
+            messagingSenderId: "670985612758",
+            appId: "1:670985612758:web:67928f8e0328d54c640877",
+            measurementId: "G-Q4X9B5HPJP"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Toggle menu function
+        window.toggleMenu = function() {
+            const menu = document.querySelector('.side-menu');
+            if (menu) {
+                menu.classList.toggle('active');
+            }
+        }
+
+        // Function to calculate days open
+        function calculateDaysOpen(complaintDate) {
+            if (!complaintDate) return 0;
+            
+            let date;
+            if (typeof complaintDate === 'string') {
+                date = new Date(complaintDate);
+            } else if (complaintDate.toDate && typeof complaintDate.toDate === 'function') {
+                date = complaintDate.toDate();
+            } else if (complaintDate.seconds) {
+                date = new Date(complaintDate.seconds * 1000);
+            } else {
+                date = new Date(complaintDate);
+            }
+            
+            if (isNaN(date.getTime())) return 0;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - date;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
+        }
+
+        // Function to format date for display
+        function formatDate(date) {
+            if (!date) return 'N/A';
+            
+            let dateObj;
+            if (typeof date === 'string') {
+                dateObj = new Date(date);
+            } else if (date.toDate && typeof date.toDate === 'function') {
+                dateObj = date.toDate();
+            } else if (date.seconds) {
+                dateObj = new Date(date.seconds * 1000);
+            } else {
+                dateObj = new Date(date);
+            }
+            
+            if (isNaN(dateObj.getTime())) return 'N/A';
+            
+            return dateObj.toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit'
+            });
+        }
+
+        // Function to get days open class
+        function getDaysOpenClass(days) {
+            if (days >= 30) return 'high';
+            if (days >= 7) return 'medium';
+            return 'low';
+        }
+
+        // Function to show open complaints daywise
+        async function showOpenComplaintsDaywise() {
+            const resultsCard = document.getElementById('resultsCard');
+            const resultsTitle = document.getElementById('resultsTitle');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            resultsCard.style.display = 'block';
+            resultsTitle.textContent = 'Open Complaints (Sorted by Days Open)';
+            resultsContent.innerHTML = '<div class="loading">Loading open complaints...</div>';
+            
+            try {
+                const companyCode = localStorage.getItem('companyCode');
+                
+                if (!companyCode) {
+                    resultsContent.innerHTML = '<div class="empty-state">Company code not found. Please login again.</div>';
+                    return;
+                }
+
+                // Fetch all open complaints
+                const snapshot = await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
+                    .where('companyCode', '==', companyCode)
+                    .where('status', '==', 'Open')
+                    .get();
+
+                if (snapshot.empty) {
+                    resultsContent.innerHTML = '<div class="empty-state">No open complaints found.</div>';
+                    return;
+                }
+
+                // Process complaints and calculate days open
+                const complaints = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const daysOpen = calculateDaysOpen(data.complaintDate);
+                    complaints.push({
+                        id: doc.id,
+                        customerName: data.customerName || 'N/A',
+                        phoneNumber: data.phoneNumber || 'N/A',
+                        reason: data.reason || data.description || 'N/A',
+                        complaintDate: data.complaintDate || 'N/A',
+                        daysOpen: daysOpen
+                    });
+                });
+
+                // Sort by days open (oldest first - highest days first)
+                complaints.sort((a, b) => b.daysOpen - a.daysOpen);
+
+                // Generate table HTML
+                let tableHTML = `
+                    <table class="complaints-table">
+                        <thead>
+                            <tr>
+                                <th>Days Open</th>
+                                <th>Client Name</th>
+                                <th>Phone Number</th>
+                                <th>Open Date</th>
+                                <th>Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                complaints.forEach(complaint => {
+                    const daysClass = getDaysOpenClass(complaint.daysOpen);
+                    tableHTML += `
+                        <tr>
+                            <td>
+                                <span class="days-open ${daysClass}">
+                                    ${complaint.daysOpen} ${complaint.daysOpen === 1 ? 'day' : 'days'}
+                                </span>
+                            </td>
+                            <td>${complaint.customerName}</td>
+                            <td>${complaint.phoneNumber}</td>
+                            <td>${formatDate(complaint.complaintDate)}</td>
+                            <td>${complaint.reason}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 15px; color: #666; font-size: 14px;">
+                        Total Open Complaints: <strong>${complaints.length}</strong>
+                    </div>
+                `;
+
+                resultsContent.innerHTML = tableHTML;
+
+            } catch (error) {
+                console.error('Error fetching open complaints:', error);
+                resultsContent.innerHTML = `<div class="empty-state">Error loading complaints: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
