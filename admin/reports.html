@@ -136,6 +136,32 @@
             color: #2e7d32;
         }
 
+        .filter-row {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .month-filter-select {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            min-width: 180px;
+        }
+
+        .reminder-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .reminder-btn:hover {
+            transform: scale(1.1);
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -231,6 +257,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Globals for reports & reminders
+        let allOpenComplaints = [];
+        let complaintsById = {};
+        let agentTelegramMap = {};
+
         // Toggle menu function
         window.toggleMenu = function() {
             const menu = document.querySelector('.side-menu');
@@ -239,22 +270,27 @@
             }
         }
 
+        // Helper to convert various Firestore/date formats into Date
+        function getDateObject(date) {
+            if (!date) return null;
+            let dateObj;
+            if (typeof date === 'string') {
+                dateObj = new Date(date);
+            } else if (date.toDate && typeof date.toDate === 'function') {
+                dateObj = date.toDate();
+            } else if (date.seconds) {
+                dateObj = new Date(date.seconds * 1000);
+            } else {
+                dateObj = new Date(date);
+            }
+            if (isNaN(dateObj.getTime())) return null;
+            return dateObj;
+        }
+
         // Function to calculate days open
         function calculateDaysOpen(complaintDate) {
-            if (!complaintDate) return 0;
-            
-            let date;
-            if (typeof complaintDate === 'string') {
-                date = new Date(complaintDate);
-            } else if (complaintDate.toDate && typeof complaintDate.toDate === 'function') {
-                date = complaintDate.toDate();
-            } else if (complaintDate.seconds) {
-                date = new Date(complaintDate.seconds * 1000);
-            } else {
-                date = new Date(complaintDate);
-            }
-            
-            if (isNaN(date.getTime())) return 0;
+            const date = getDateObject(complaintDate);
+            if (!date) return 0;
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -268,20 +304,8 @@
 
         // Function to format date for display
         function formatDate(date) {
-            if (!date) return 'N/A';
-            
-            let dateObj;
-            if (typeof date === 'string') {
-                dateObj = new Date(date);
-            } else if (date.toDate && typeof date.toDate === 'function') {
-                dateObj = date.toDate();
-            } else if (date.seconds) {
-                dateObj = new Date(date.seconds * 1000);
-            } else {
-                dateObj = new Date(date);
-            }
-            
-            if (isNaN(dateObj.getTime())) return 'N/A';
+            const dateObj = getDateObject(date);
+            if (!dateObj) return 'N/A';
             
             return dateObj.toLocaleDateString('en-IN', {
                 year: 'numeric',
@@ -290,11 +314,92 @@
             });
         }
 
+        // Function to get month key and label
+        function getMonthInfo(date) {
+            const dateObj = getDateObject(date);
+            if (!dateObj) return null;
+            const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+            const label = dateObj.toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'short'
+            });
+            return { key, label };
+        }
+
         // Function to get days open class
         function getDaysOpenClass(days) {
             if (days >= 30) return 'high';
             if (days >= 7) return 'medium';
             return 'low';
+        }
+
+        // Load agents so we can fetch Telegram IDs for reminders
+        async function loadAgentsForReminders(companyCode) {
+            try {
+                const snapshot = await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('masters')
+                    .collection('serviceagents')
+                    .where('status', '==', 'A')
+                    .get();
+
+                agentTelegramMap = {};
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    agentTelegramMap[doc.id] = {
+                        telegramId: data.agentTelegramId || '',
+                        name: data.agentName || ''
+                    };
+                });
+            } catch (error) {
+                console.error('Error loading agents for reminders:', error);
+            }
+        }
+
+        // Send Telegram reminder for a specific complaint
+        async function sendReminder(complaintId) {
+            const complaint = complaintsById[complaintId];
+            if (!complaint) {
+                alert('Complaint details not found.');
+                return;
+            }
+
+            const agentId = complaint.agentId || '';
+            let telegramId = complaint.agentTelegramId || '';
+
+            if (!telegramId && agentId && agentTelegramMap[agentId]) {
+                telegramId = agentTelegramMap[agentId].telegramId;
+            }
+
+            if (!telegramId) {
+                alert('No Telegram ID found for the selected agent.');
+                return;
+            }
+
+            const openSince = formatDate(complaint.complaintDate);
+            const message = `REMINDER: Open complaint Ticket ID:${complaint.ticketId || ''}, Job No:${complaint.jobNumber || ''}, Customer:${complaint.customerName || ''}, Phone:${complaint.phoneNumber || ''}, Open since:${openSince}, Problem:${complaint.description || complaint.reason || ''}. Please attend at the earliest.`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const telegramUrl = `https://api.telegram.org/bot1647627417:AAEJ_r5VnmbwSXw2NV6VSqeXt7PAqbBEvec/sendmessage?chat_id=${telegramId}&text=${encodedMessage}`;
+
+            try {
+                console.log('Sending reminder to Telegram ID:', telegramId);
+                console.log('Telegram Message:', message);
+                const response = await fetch(telegramUrl);
+                const result = await response.json();
+
+                console.log('Telegram API Response (reminder):', result);
+
+                if (result.ok) {
+                    alert('Reminder sent successfully to agent.');
+                } else {
+                    alert('Failed to send reminder via Telegram.');
+                }
+            } catch (error) {
+                console.error('Error sending Telegram reminder:', error);
+                alert('Error sending reminder. Please try again.');
+            }
         }
 
         // Function to show open complaints daywise
@@ -314,6 +419,9 @@
                     resultsContent.innerHTML = '<div class="empty-state">Company code not found. Please login again.</div>';
                     return;
                 }
+
+                // Load agents for Telegram reminders
+                await loadAgentsForReminders(companyCode);
 
                 // Fetch all open complaints
                 const snapshot = await db.collection('complaints')
@@ -341,15 +449,57 @@
                         phoneNumber: data.phoneNumber || 'N/A',
                         reason: data.reason || data.description || 'N/A',
                         complaintDate: data.complaintDate || 'N/A',
-                        daysOpen: daysOpen
+                        daysOpen: daysOpen,
+                        agentId: data.agentId || '',
+                        agentTelegramId: data.agentTelegramId || '',
+                        ticketId: data.ticketId || '',
+                        jobNumber: (data.jobNumber || '').toString().trim(),
+                        address: data.address || '',
+                        description: data.description || '',
+                        dealer: data.dealer || '',
+                        underWarranty: data.underWarranty || '',
+                        priority: data.priority || '',
+                        brand: data.brand || ''
                     });
                 });
 
                 // Sort by days open (oldest first - highest days first)
                 complaints.sort((a, b) => b.daysOpen - a.daysOpen);
 
-                // Generate table HTML
-                let tableHTML = `
+                // Prepare month filter data
+                const monthMap = new Map();
+                complaints.forEach(complaint => {
+                    const info = getMonthInfo(complaint.complaintDate);
+                    if (info) {
+                        complaint._monthKey = info.key;
+                        if (!monthMap.has(info.key)) {
+                            monthMap.set(info.key, info.label);
+                        }
+                    } else {
+                        complaint._monthKey = 'unknown';
+                    }
+                });
+
+                const monthOptionsHtml = Array.from(monthMap.entries())
+                    .sort((a, b) => a[0] < b[0] ? 1 : -1) // latest month first
+                    .map(([key, label]) => `<option value="${key}">${label}</option>`)
+                    .join('');
+
+                allOpenComplaints = complaints;
+                complaintsById = {};
+                complaints.forEach(c => {
+                    complaintsById[c.id] = c;
+                });
+
+                // Generate table & filter HTML
+                const baseHTML = `
+                    <div class="filter-row">
+                        <label for="monthFilter">Filter by month:</label>
+                        <select id="monthFilter" class="month-filter-select">
+                            <option value="all">All months</option>
+                            ${monthOptionsHtml}
+                        </select>
+                    </div>
                     <table class="complaints-table">
                         <thead>
                             <tr>
@@ -358,37 +508,58 @@
                                 <th>Phone Number</th>
                                 <th>Open Date</th>
                                 <th>Remark</th>
+                                <th>Reminder</th>
                             </tr>
                         </thead>
-                        <tbody>
-                `;
-
-                complaints.forEach(complaint => {
-                    const daysClass = getDaysOpenClass(complaint.daysOpen);
-                    tableHTML += `
-                        <tr>
-                            <td>
-                                <span class="days-open ${daysClass}">
-                                    ${complaint.daysOpen} ${complaint.daysOpen === 1 ? 'day' : 'days'}
-                                </span>
-                            </td>
-                            <td>${complaint.customerName}</td>
-                            <td>${complaint.phoneNumber}</td>
-                            <td>${formatDate(complaint.complaintDate)}</td>
-                            <td>${complaint.reason}</td>
-                        </tr>
-                    `;
-                });
-
-                tableHTML += `
+                        <tbody id="complaintsTableBody">
                         </tbody>
                     </table>
-                    <div style="margin-top: 15px; color: #666; font-size: 14px;">
-                        Total Open Complaints: <strong>${complaints.length}</strong>
+                    <div id="complaintsSummary" style="margin-top: 15px; color: #666; font-size: 14px;">
                     </div>
                 `;
 
-                resultsContent.innerHTML = tableHTML;
+                resultsContent.innerHTML = baseHTML;
+
+                function renderComplaintsTable(list) {
+                    const tbody = document.getElementById('complaintsTableBody');
+                    const summary = document.getElementById('complaintsSummary');
+                    tbody.innerHTML = '';
+
+                    list.forEach(complaint => {
+                        const daysClass = getDaysOpenClass(complaint.daysOpen);
+                        const rowHTML = `
+                            <tr>
+                                <td>
+                                    <span class="days-open ${daysClass}">
+                                        ${complaint.daysOpen} ${complaint.daysOpen === 1 ? 'day' : 'days'}
+                                    </span>
+                                </td>
+                                <td>${complaint.customerName}</td>
+                                <td>${complaint.phoneNumber}</td>
+                                <td>${formatDate(complaint.complaintDate)}</td>
+                                <td>${complaint.reason}</td>
+                                <td>
+                                    <button class="reminder-btn" title="Send reminder" onclick="sendReminder('${complaint.id}')">🔔</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', rowHTML);
+                    });
+
+                    summary.innerHTML = `Showing <strong>${list.length}</strong> of <strong>${allOpenComplaints.length}</strong> open complaints.`;
+                }
+
+                const monthFilter = document.getElementById('monthFilter');
+                monthFilter.addEventListener('change', function() {
+                    const value = this.value;
+                    const filtered = value === 'all'
+                        ? allOpenComplaints
+                        : allOpenComplaints.filter(c => c._monthKey === value);
+                    renderComplaintsTable(filtered);
+                });
+
+                // Initial render with all complaints
+                renderComplaintsTable(allOpenComplaints);
 
             } catch (error) {
                 console.error('Error fetching open complaints:', error);
