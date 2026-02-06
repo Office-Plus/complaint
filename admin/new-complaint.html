@@ -1621,7 +1621,7 @@
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
                             <button class="action-btn pdf-btn" onclick="generatePDF('${doc.id}')" title="Generate PDF">📄</button>
                             <button class="action-btn client-called-btn ${complaint.clientCalledClosed ? 'active' : ''}" onclick="toggleClientCalled('${doc.id}')" title="${complaint.clientCalledClosed ? 'Unmark: Client Called - Closed' : 'Mark: Client Called - Closed'}">📞</button>
-                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete" style="display: none;">🗑️</button>
+                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -1956,7 +1956,7 @@
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
                             <button class="action-btn pdf-btn" onclick="generatePDF('${doc.id}')" title="Generate PDF">📄</button>
                             <button class="action-btn client-called-btn ${complaint.clientCalledClosed ? 'active' : ''}" onclick="toggleClientCalled('${doc.id}')" title="${complaint.clientCalledClosed ? 'Unmark: Client Called - Closed' : 'Mark: Client Called - Closed'}">📞</button>
-                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete" style="display: none;">🗑️</button>
+                            <button class="action-btn delete-btn" onclick="deleteComplaint('${doc.id}')" title="Delete">🗑️</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
