@@ -1116,6 +1116,23 @@
             }
         }
 
+        // New complaints only: block if an Open ticket already exists for same phone + agent + complaint date
+        async function checkDuplicateOpenPhoneAgentDate(companyCode, phoneNumber, agentId, complaintDate) {
+            const snap = await db.collection('complaints')
+                .doc('cmplts')
+                .collection(companyCode)
+                .doc('complaints')
+                .collection('complaints-coll')
+                .where('companyCode', '==', companyCode)
+                .where('phoneNumber', '==', phoneNumber)
+                .where('agentId', '==', agentId)
+                .where('complaintDate', '==', complaintDate)
+                .where('status', '==', 'Open')
+                .limit(10)
+                .get();
+            return snap.docs.length > 0;
+        }
+
         // Show existing complaints popup
         function showExistingComplaintsPopup(complaints, phoneNumber, billNo) {
             const overlay = document.getElementById('existingComplaintsOverlay');
@@ -2629,7 +2646,7 @@
                 }
 
                 // Build short message in the requested format (with Ticket ID at the end)
-                const message = `Complainant Number: ${formatValue(complaintData.phoneNumber)}, Name: ${nameWithDealer || ''}, Job No:${formatValue(complaintData.jobNumber)}, Address:${formatValue(complaintData.address)} , Problem:${formatValue(complaintData.description || complaintData.reason || '')}, Warrenty:${warrantyValue}, Priority:${priorityValue}, Ticket ID:${formatValue(String(complaintData.ticketId || ''))}`;
+                const message = `Complainant Number: ${formatValue(complaintData.phoneNumber)}, Name: ${nameWithDealer || ''}, Job No:${formatValue(complaintData.jobNumber)}, Category:${formatValue(complaintData.category)}, Address:${formatValue(complaintData.address)} , Problem:${formatValue(complaintData.description || complaintData.reason || '')}, Warrenty:${warrantyValue}, Priority:${priorityValue}, Ticket ID:${formatValue(String(complaintData.ticketId || ''))}`;
 
                 const encodedMessage = encodeURIComponent(message);
                 const telegramId = complaintData.agentTelegramId;
@@ -2728,7 +2745,13 @@
                 console.error('Error sending SMS:', error);
                 console.error('Error details:', error.message);
                 console.log('=== SMS Function END (ERROR) ===');
-                showNotification('Error sending SMS. Please check if sendsms.php is accessible.', 'error');
+                const isNetworkFail = error && (error.name === 'TypeError' || String(error.message || '').includes('Failed to fetch'));
+                showNotification(
+                    isNetworkFail
+                        ? 'SMS failed: browser blocked HTTPS (often expired SSL on paezr.com). Renew the certificate on the host—updating sendsms.php alone will not fix this.'
+                        : 'Error sending SMS. Please check if sendsms.php is accessible.',
+                    'error'
+                );
                 return { success: false, error: error.message };
             }
         }
@@ -3086,6 +3109,49 @@
                 submitBtn.textContent = originalBtnText;
                 document.getElementById('phoneNumber').focus();
                 return;
+            }
+
+            // New complaint only: at most one Open ticket per phone + agent + complaint date
+            if (!editId) {
+                const complaintDateVal = (document.getElementById('complaintDate').value || '').trim();
+                const agentIdVal = document.getElementById('agent').value;
+                if (!complaintDateVal) {
+                    showNotification('Complaint date is required.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    document.getElementById('complaintDate').focus();
+                    return;
+                }
+                if (!agentIdVal) {
+                    showNotification('Please select an agent.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    document.getElementById('agent').focus();
+                    return;
+                }
+                try {
+                    const dupOpenPhoneAgentDate = await checkDuplicateOpenPhoneAgentDate(
+                        companyCode,
+                        phoneNumber,
+                        agentIdVal,
+                        complaintDateVal
+                    );
+                    if (dupOpenPhoneAgentDate) {
+                        showNotification(
+                            'An open complaint for this phone number, agent, and complaint date already exists. Use that ticket or change the agent or date.',
+                            'error'
+                        );
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalBtnText;
+                        return;
+                    }
+                } catch (dupRuleErr) {
+                    console.error('Duplicate open phone/agent/date check failed:', dupRuleErr);
+                    showNotification('Could not verify duplicate rules. Please try again.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    return;
+                }
             }
 
             // Before creating a new complaint, check for existing complaints with same phone or bill no
