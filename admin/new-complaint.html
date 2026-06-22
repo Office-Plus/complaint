@@ -478,6 +478,25 @@
              gap: 5px;
          }
 
+         .call-response-ok {
+             color: #2e7d32;
+             font-size: 18px;
+             line-height: 1;
+         }
+
+         .call-response-not-ok {
+             color: #c62828;
+             font-size: 18px;
+             line-height: 1;
+         }
+
+         .call-response-date {
+             text-align: left;
+             font-size: 12px;
+             color: #666;
+             margin-top: 4px;
+         }
+
         /* Existing complaints popup */
         .existing-complaints-overlay {
             position: fixed;
@@ -797,6 +816,14 @@
                                 <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
+                        <div class="form-group" id="customerResponseFieldGroup" style="display: none;">
+                            <label for="customerCallResponse">Customer Response</label>
+                            <select id="customerCallResponse">
+                                <option value="">Select</option>
+                                <option value="ok">OK</option>
+                                <option value="not ok">Not OK</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -902,6 +929,7 @@
                         <th>Priority</th>
                         <th>Status</th>
                         <th>Complaint Date</th>
+                        <th>Customer Response</th>
                         <!-- <th>Closed Date</th> -->
                         <th>Actions</th>
                     </tr>
@@ -1469,6 +1497,42 @@
             return '';
         }
 
+        function formatCustomerCallResponseDate() {
+            const now = new Date();
+            const months = ['january', 'february', 'march', 'april', 'may', 'june',
+                'july', 'august', 'september', 'october', 'november', 'december'];
+            return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        }
+
+        function buildCustomerCallResponseValue(status) {
+            if (!status) return '';
+            return `${status}-${formatCustomerCallResponseDate()}`;
+        }
+
+        function parseCustomerCallResponse(stored) {
+            if (!stored) return { status: '', date: '' };
+            const value = String(stored).trim();
+            if (value.toLowerCase().startsWith('not ok-')) {
+                return { status: 'not ok', date: value.substring(7) };
+            }
+            if (value.toLowerCase().startsWith('ok-')) {
+                return { status: 'ok', date: value.substring(3) };
+            }
+            return { status: '', date: '' };
+        }
+
+        function renderCustomerCallResponseCell(stored) {
+            const { status, date } = parseCustomerCallResponse(stored);
+            if (!status) return '';
+            const isOk = status === 'ok';
+            return `
+                <div class="date-time-cell">
+                    <div class="${isOk ? 'call-response-ok' : 'call-response-not-ok'}">${isOk ? '👍' : '👎'}</div>
+                    ${date ? `<div class="call-response-date">${date}</div>` : ''}
+                </div>
+            `;
+        }
+
         // Search by complaint job number
         async function searchByComplaintNo(jobNumber) {
             try {
@@ -1547,6 +1611,7 @@
                                 ${complaintTime ? `<span class="time-badge">🕐 ${complaintTime}</span>` : ''}
                             </div>
                         </td>
+                        <td>${renderCustomerCallResponseCell(complaint.customerCallResponse)}</td>
                         
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
@@ -1633,6 +1698,7 @@
                                 ${complaintTime ? `<span class="time-badge">🕐 ${complaintTime}</span>` : ''}
                             </div>
                         </td>
+                        <td>${renderCustomerCallResponseCell(complaint.customerCallResponse)}</td>
 
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
@@ -1968,6 +2034,7 @@
                                 ${complaintTime ? `<span class="time-badge">🕐 ${complaintTime}</span>` : ''}
                             </div>
                         </td>
+                        <td>${renderCustomerCallResponseCell(complaint.customerCallResponse)}</td>
                         
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
@@ -2041,8 +2108,11 @@
                 document.getElementById('reason').value = complaint.reason || '';
                 document.getElementById('status').value = complaint.status || 'Open';
 
-                // Show status field when editing
+                // Show status and customer response fields when editing
                 document.getElementById('statusFieldGroup').style.display = 'block';
+                document.getElementById('customerResponseFieldGroup').style.display = 'block';
+                const parsedCustomerResponse = parseCustomerCallResponse(complaint.customerCallResponse);
+                document.getElementById('customerCallResponse').value = parsedCustomerResponse.status || '';
 
                 // Store the document ID, existing ticket ID, and original job number for update
                 document.getElementById('complaintForm').dataset.editId = docId;
@@ -2847,9 +2917,11 @@
             document.getElementById('agentTelegramId').value = '';
             document.getElementById('jobNumber').value = '';
             
-            // Hide status field for new complaints
+            // Hide status and customer response fields for new complaints
             document.getElementById('statusFieldGroup').style.display = 'none';
+            document.getElementById('customerResponseFieldGroup').style.display = 'none';
             document.getElementById('status').value = 'Open';
+            document.getElementById('customerCallResponse').value = '';
             
             // Reset button text and remove edit ID and original job number
             document.getElementById('submitBtn').textContent = 'Submit Complaint';
@@ -3269,6 +3341,11 @@
                     // Get the status value when editing
                     const statusValue = document.getElementById('status').value;
                     complaintData.status = statusValue;
+
+                    const customerResponseSelection = document.getElementById('customerCallResponse').value;
+                    if (customerResponseSelection) {
+                        complaintData.customerCallResponse = buildCustomerCallResponseValue(customerResponseSelection);
+                    }
                     
                     // If status is being changed to "Closed", add closedAt timestamp
                     if (statusValue === 'Closed') {
