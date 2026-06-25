@@ -490,6 +490,44 @@
              line-height: 1;
          }
 
+         .call-response-btns {
+             display: flex;
+             gap: 6px;
+             align-items: center;
+         }
+
+         .call-response-btn {
+             border: 1px solid transparent;
+             background: none;
+             cursor: pointer;
+             font-size: 18px;
+             line-height: 1;
+             padding: 2px 4px;
+             border-radius: 4px;
+             opacity: 0.45;
+             transition: opacity 0.2s, transform 0.15s;
+         }
+
+         .call-response-btn:hover {
+             opacity: 1;
+             transform: scale(1.1);
+         }
+
+         .call-response-btn.active {
+             opacity: 1;
+             font-weight: bold;
+         }
+
+         .call-response-btn.call-response-ok.active {
+             border-color: #2e7d32;
+             background: #e8f5e9;
+         }
+
+         .call-response-btn.call-response-not-ok.active {
+             border-color: #c62828;
+             background: #ffebee;
+         }
+
          .call-response-date {
              text-align: left;
              font-size: 12px;
@@ -1521,16 +1559,48 @@
             return { status: '', date: '' };
         }
 
-        function renderCustomerCallResponseCell(stored) {
+        function renderCustomerCallResponseCell(docId, stored) {
             const { status, date } = parseCustomerCallResponse(stored);
-            if (!status) return '';
             const isOk = status === 'ok';
+            const isNotOk = status === 'not ok';
             return `
                 <div class="date-time-cell">
-                    <div class="${isOk ? 'call-response-ok' : 'call-response-not-ok'}">${isOk ? '👍' : '👎'}</div>
+                    <div class="call-response-btns">
+                        <button type="button" class="call-response-btn call-response-ok ${isOk ? 'active' : ''}" onclick="setCustomerCallResponse('${docId}', 'ok')" title="Customer responded OK">👍</button>
+                        <button type="button" class="call-response-btn call-response-not-ok ${isNotOk ? 'active' : ''}" onclick="setCustomerCallResponse('${docId}', 'not ok')" title="Customer did not respond OK">👎</button>
+                    </div>
                     ${date ? `<div class="call-response-date">${date}</div>` : ''}
                 </div>
             `;
+        }
+
+        async function setCustomerCallResponse(docId, status) {
+            try {
+                const companyCode = localStorage.getItem('companyCode');
+                const value = buildCustomerCallResponseValue(status);
+
+                await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
+                    .doc(docId)
+                    .update({
+                        customerCallResponse: value,
+                        updatedAt: new Date()
+                    });
+
+                showNotification(
+                    status === 'ok'
+                        ? 'Customer response marked OK'
+                        : 'Customer response marked Not OK',
+                    'success'
+                );
+                loadComplaints(true);
+            } catch (error) {
+                console.error('Error updating customer response:', error);
+                showNotification('Error updating customer response. Please try again.', 'error');
+            }
         }
 
         // Search by complaint job number
@@ -1611,7 +1681,7 @@
                                 ${complaintTime ? `<span class="time-badge">🕐 ${complaintTime}</span>` : ''}
                             </div>
                         </td>
-                        <td>${renderCustomerCallResponseCell(complaint.customerCallResponse)}</td>
+                        <td>${renderCustomerCallResponseCell(doc.id, complaint.customerCallResponse)}</td>
                         
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
@@ -1698,7 +1768,7 @@
                                 ${complaintTime ? `<span class="time-badge">🕐 ${complaintTime}</span>` : ''}
                             </div>
                         </td>
-                        <td>${renderCustomerCallResponseCell(complaint.customerCallResponse)}</td>
+                        <td>${renderCustomerCallResponseCell(doc.id, complaint.customerCallResponse)}</td>
 
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
@@ -2034,7 +2104,7 @@
                                 ${complaintTime ? `<span class="time-badge">🕐 ${complaintTime}</span>` : ''}
                             </div>
                         </td>
-                        <td>${renderCustomerCallResponseCell(complaint.customerCallResponse)}</td>
+                        <td>${renderCustomerCallResponseCell(doc.id, complaint.customerCallResponse)}</td>
                         
                         <td>
                             <button class="action-btn edit-btn" onclick="editComplaint('${doc.id}')" title="Edit">✏️</button>
