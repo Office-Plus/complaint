@@ -2697,7 +2697,18 @@
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = String(date.getFullYear()).slice(-2);
             
-            const brandPrefix = brand.substring(0, 3).toUpperCase();
+            // Ignore spaces in brand; always use exactly 3 letters (pad with X if shorter)
+            let brandLetters = brand.replace(/\s+/g, '').toUpperCase();
+            if (brandLetters.length === 0) {
+                brandLetters = 'XXX';
+            } else if (brandLetters.length === 1) {
+                brandLetters = brandLetters + 'XX';
+            } else if (brandLetters.length === 2) {
+                brandLetters = brandLetters + 'X';
+            } else {
+                brandLetters = brandLetters.substring(0, 3);
+            }
+            const brandPrefix = brandLetters;
             const phoneSuffix = phoneNumber.slice(-4);
 
             // Trim the final result to ensure no trailing spaces
