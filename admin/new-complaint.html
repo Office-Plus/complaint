@@ -2208,14 +2208,39 @@
 
             try {
                 const companyCode = localStorage.getItem('companyCode');
+                const userId = localStorage.getItem('userId');
+                const userEmail = localStorage.getItem('userEmail');
 
-                await db.collection('complaints')
+                const complaintRef = db.collection('complaints')
                     .doc('cmplts')
                     .collection(companyCode)
                     .doc('complaints')
                     .collection('complaints-coll')
-                    .doc(docId)
-                    .delete();
+                    .doc(docId);
+
+                const doc = await complaintRef.get();
+                if (!doc.exists) {
+                    showNotification('Complaint not found.', 'error');
+                    return;
+                }
+
+                const complaint = doc.data();
+
+                // Save deletion log before removing the complaint
+                await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('deletionlog')
+                    .add({
+                        ...complaint,
+                        originalDocId: docId,
+                        deletedAt: new Date(),
+                        deletedBy: userId || '',
+                        deletedByEmail: userEmail || ''
+                    });
+
+                await complaintRef.delete();
 
                 showNotification('Complaint deleted successfully!');
                 loadComplaints(true);
