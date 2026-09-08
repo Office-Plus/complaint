@@ -223,6 +223,105 @@
             display: block;
         }
 
+        /* Messages tab */
+        .messages-panel {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .messages-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .messages-panel-header h2 {
+            margin: 0 0 6px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .messages-panel-header p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fafafa;
+        }
+
+        .message-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .message-card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .message-card-meta strong {
+            color: #222;
+            font-size: 15px;
+        }
+
+        .message-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .message-card-actions .btn {
+            padding: 8px 14px;
+            font-size: 13px;
+            margin-right: 0;
+        }
+
+        .message-body {
+            margin: 0;
+            padding: 16px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            color: #222;
+            background: #f8fafc;
+        }
+
+        .messages-empty,
+        .messages-loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
         /* Table styles */
         table {
             width: 100%;
@@ -706,6 +805,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('form')">Add/Edit Complaint</button>
             <button class="tab" onclick="switchTab('list')">Complaint List</button>
+            <button class="tab" onclick="switchTab('messages')">Messages</button>
         </div>
 
         <div id="formTab" class="tab-content active">
@@ -976,6 +1076,21 @@
             </table>
             <div id="loading" class="loading" style="display: none;">Loading more complaints...</div>
             <div id="noMore" class="no-more">No more complaints to load</div>
+        </div>
+
+        <div id="messagesTab" class="tab-content">
+            <div class="messages-panel">
+                <div class="messages-panel-header">
+                    <div>
+                        <h2>Agent Messages</h2>
+                        <p>Last 10 complaints with a copy-ready message for Telegram or WhatsApp when auto-send fails.</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="refreshMessagesBtn" onclick="loadRecentMessages()">Refresh</button>
+                </div>
+                <div id="messagesList" class="messages-list">
+                    <div class="messages-loading">Open this tab to load recent messages.</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1332,6 +1447,8 @@
             if (tab === 'list') {
                 loadComplaints(true);
                 updateSearchTip();
+            } else if (tab === 'messages') {
+                loadRecentMessages();
             }
         }
 
@@ -2788,42 +2905,149 @@
             }, 3000);
         }
 
+        // Shared agent message builder (Telegram / WhatsApp / Messages tab)
+        function buildAgentMessage(complaintData) {
+            const formatValue = (value) => {
+                if (value === null || value === undefined) return '';
+                const text = value.toString().trim();
+                return text;
+            };
+
+            let nameWithDealer = formatValue(complaintData.customerName);
+            if (complaintData.dealer && complaintData.dealer.toString().trim() !== '') {
+                const dealer = complaintData.dealer.toString().trim();
+                nameWithDealer = nameWithDealer ? `${nameWithDealer} ${dealer}` : dealer;
+            }
+
+            let warrantyValue = formatValue(complaintData.underWarranty);
+            if (warrantyValue === 'Yes') {
+                warrantyValue = 'warranty';
+            } else if (warrantyValue === 'No') {
+                warrantyValue = 'no warranty';
+            }
+
+            let priorityValue = formatValue(complaintData.priority);
+            if (priorityValue === 'High') {
+                priorityValue = 'HIGH';
+            } else if (priorityValue === 'Low') {
+                priorityValue = 'LOW';
+            }
+
+            const lines = [
+                `Complainant Number: ${formatValue(complaintData.phoneNumber)}`,
+                `Name: ${nameWithDealer || '-'}`,
+                `Job No: ${formatValue(complaintData.jobNumber) || '-'}`,
+                `Category: ${formatValue(complaintData.category) || '-'}`,
+                `Address: ${formatValue(complaintData.address) || '-'}`,
+                `Problem: ${formatValue(complaintData.description || complaintData.reason) || '-'}`,
+                `Warranty: ${warrantyValue || '-'}`,
+                `Priority: ${priorityValue || '-'}`,
+                `Ticket ID: ${formatValue(String(complaintData.ticketId || '')) || '-'}`
+            ];
+
+            return lines.join('\n');
+        }
+
+        async function copyAgentMessage(message, buttonEl) {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(message);
+                } else {
+                    const temp = document.createElement('textarea');
+                    temp.value = message;
+                    temp.setAttribute('readonly', '');
+                    temp.style.position = 'absolute';
+                    temp.style.left = '-9999px';
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                }
+
+                showNotification('Message copied. Paste it in Telegram or WhatsApp.');
+                if (buttonEl) {
+                    const original = buttonEl.textContent;
+                    buttonEl.textContent = 'Copied';
+                    setTimeout(() => {
+                        buttonEl.textContent = original;
+                    }, 1500);
+                }
+            } catch (err) {
+                console.error('Copy failed:', err);
+                showNotification('Could not copy message. Select and copy manually.', 'error');
+            }
+        }
+
+        async function loadRecentMessages() {
+            const listEl = document.getElementById('messagesList');
+            if (!listEl) return;
+
+            const companyCode = localStorage.getItem('companyCode');
+            if (!companyCode || companyCode === 'null' || companyCode.trim() === '') {
+                listEl.innerHTML = '<div class="messages-empty">Company code is missing. Set it in Settings first.</div>';
+                return;
+            }
+
+            listEl.innerHTML = '<div class="messages-loading">Loading last 10 messages...</div>';
+
+            try {
+                const snapshot = await db.collection('complaints')
+                    .doc('cmplts')
+                    .collection(companyCode)
+                    .doc('complaints')
+                    .collection('complaints-coll')
+                    .where('companyCode', '==', companyCode)
+                    .orderBy('createdAt', 'desc')
+                    .limit(10)
+                    .get();
+
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<div class="messages-empty">No complaints found yet.</div>';
+                    return;
+                }
+
+                listEl.innerHTML = '';
+                snapshot.docs.forEach((doc, index) => {
+                    const data = doc.data();
+                    const message = buildAgentMessage(data);
+                    const agentName = agentNamesMap[data.agentId] || 'N/A';
+                    const jobNo = (data.jobNumber || '').toString().trim() || '-';
+                    const ticketId = data.ticketId != null ? String(data.ticketId) : '-';
+                    const complaintDate = data.complaintDate || '-';
+                    const customerName = (data.customerName || '').toString().trim() || 'Unknown';
+
+                    const card = document.createElement('div');
+                    card.className = 'message-card';
+                    card.innerHTML = `
+                        <div class="message-card-header">
+                            <div class="message-card-meta">
+                                <strong>#${index + 1} · Ticket ${ticketId} · ${jobNo}</strong>
+                                <span>${customerName} · Phone ${data.phoneNumber || '-'} · Agent ${agentName}</span>
+                                <span>Complaint date: ${complaintDate} · Status: ${data.status || '-'}</span>
+                            </div>
+                            <div class="message-card-actions">
+                                <button type="button" class="btn btn-primary copy-message-btn">Copy Message</button>
+                            </div>
+                        </div>
+                        <pre class="message-body"></pre>
+                    `;
+                    card.querySelector('.message-body').textContent = message;
+                    card.querySelector('.copy-message-btn').addEventListener('click', function() {
+                        copyAgentMessage(message, this);
+                    });
+                    listEl.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading recent messages:', error);
+                listEl.innerHTML = '<div class="messages-empty">Could not load messages. Check console / Firestore index if needed.</div>';
+                showNotification('Error loading messages. Please try again.', 'error');
+            }
+        }
+
         // Send Telegram notification
         async function sendTelegramNotification(complaintData, isUpdate = false) {
             try {
-                // Helper function to format text (remove extra spaces, handle empty values)
-                const formatValue = (value) => {
-                    if (!value || value.trim() === '') return '';
-                    return value.toString().trim();
-                };
-
-                // Build name with dealer if available
-                let nameWithDealer = formatValue(complaintData.customerName);
-                if (complaintData.dealer && complaintData.dealer.trim() !== '') {
-                    nameWithDealer = nameWithDealer ? `${nameWithDealer} ${complaintData.dealer}` : complaintData.dealer;
-                }
-
-                // Format warranty value
-                let warrantyValue = formatValue(complaintData.underWarranty);
-                if (warrantyValue === 'Yes') {
-                    warrantyValue = 'warranty';
-                } else if (warrantyValue === 'No') {
-                    warrantyValue = 'no warranty';
-                } else if (!warrantyValue) {
-                    warrantyValue = '';
-                }
-
-                // Format priority (abbreviate if needed)
-                let priorityValue = formatValue(complaintData.priority);
-                if (priorityValue === 'High') {
-                    priorityValue = 'HIGH';
-                } else if (priorityValue === 'Low') {
-                    priorityValue = 'LOW';
-                }
-
-                // Build short message in the requested format (with Ticket ID at the end)
-                const message = `Complainant Number: ${formatValue(complaintData.phoneNumber)}, Name: ${nameWithDealer || ''}, Job No:${formatValue(complaintData.jobNumber)}, Category:${formatValue(complaintData.category)}, Address:${formatValue(complaintData.address)} , Problem:${formatValue(complaintData.description || complaintData.reason || '')}, Warrenty:${warrantyValue}, Priority:${priorityValue}, Ticket ID:${formatValue(String(complaintData.ticketId || ''))}`;
-
+                const message = buildAgentMessage(complaintData);
                 const encodedMessage = encodeURIComponent(message);
                 const telegramId = complaintData.agentTelegramId;
                 const telegramUrl = `https://api.telegram.org/bot1647627417:AAEJ_r5VnmbwSXw2NV6VSqeXt7PAqbBEvec/sendmessage?chat_id=${telegramId}&text=${encodedMessage}`;
