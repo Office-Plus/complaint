@@ -2935,11 +2935,13 @@
 
             const lines = [
                 `Complainant Number: ${formatValue(complaintData.phoneNumber)}`,
+                `Alternate Number: ${formatValue(complaintData.alternateNumber) || '-'}`,
                 `Name: ${nameWithDealer || '-'}`,
                 `Job No: ${formatValue(complaintData.jobNumber) || '-'}`,
                 `Category: ${formatValue(complaintData.category) || '-'}`,
                 `Address: ${formatValue(complaintData.address) || '-'}`,
                 `Problem: ${formatValue(complaintData.description || complaintData.reason) || '-'}`,
+                `No. of Products: ${formatValue(complaintData.numberOfProducts) || '-'}`,
                 `Warranty: ${warrantyValue || '-'}`,
                 `Priority: ${priorityValue || '-'}`,
                 `Ticket ID: ${formatValue(String(complaintData.ticketId || '')) || '-'}`
