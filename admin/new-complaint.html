@@ -3104,12 +3104,12 @@
                 };
 
                 console.log('Sending SMS request via PHP proxy...');
-                console.log('Request URL: https://sapphireprofits.com/htmx/pana/sendsms.php');
+                console.log('Request URL: https://sapphireprofits.com/htmx/eric/sendsms.php');
                 console.log('Request Data:', requestData);
 
                 // Send SMS using PHP proxy to avoid CORS issues
-                // PATH: https://sapphireprofits.com/htmx/pana/sendsms.php (hosted online)
-                const response = await fetch("https://sapphireprofits.com/htmx/pana/sendsms.php", {
+                // PATH: https://sapphireprofits.com/htmx/eric/sendsms.php (hosted online)
+                const response = await fetch("https://sapphireprofits.com/htmx/eric/sendsms.php", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -3150,7 +3150,7 @@
                 const isNetworkFail = error && (error.name === 'TypeError' || String(error.message || '').includes('Failed to fetch'));
                 showNotification(
                     isNetworkFail
-                        ? 'SMS failed: browser blocked HTTPS (often expired SSL on sapphireprofits.com). Renew the certificate on the host—updating sendsms.php alone will not fix this.'
+                        ? 'SMS failed: browser could not reach sendsms.php (check file path, CORS, or Mod_Security on sapphireprofits.com).'
                         : 'Error sending SMS. Please check if sendsms.php is accessible.',
                     'error'
                 );
